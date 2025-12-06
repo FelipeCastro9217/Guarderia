@@ -63,10 +63,10 @@ namespace Guarderia.Controllers
                         return View("Index");
                     }
 
-                    // Aumentar el stock (devolver servicios)
+                    // Aumentar el stock (devolver servicios) - ESTO SÍ MODIFICA STOCK
                     servicioDb.StockDisponible += servicio.Cantidad;
 
-                    // Crear movimiento de entrada
+                    // Crear movimiento de entrada para registrar la devolución
                     var movimiento = new MovimientoServicio
                     {
                         IdServicio = servicio.IdServicio,
@@ -74,9 +74,10 @@ namespace Guarderia.Controllers
                         TipoMovimiento = "Entrada",
                         Cantidad = servicio.Cantidad,
                         FechaMovimiento = DateTime.Now,
-                        Observaciones = "Eliminación/Devolución de servicio"
+                        Observaciones = "Eliminación/Devolución de servicio - Stock aumentado"
                     };
                     _context.MovimientosServicios.Add(movimiento);
+                    _context.Update(servicioDb);
                 }
 
                 await _context.SaveChangesAsync();

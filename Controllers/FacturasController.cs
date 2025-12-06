@@ -72,7 +72,7 @@ namespace Guarderia.Controllers
                 decimal totalDescuentoItems = 0;
                 var detalles = new List<DetalleFactura>();
 
-                // Validar stock y crear detalles
+                // Validar stock SOLAMENTE (no modificarlo)
                 foreach (var servicio in servicios)
                 {
                     var servicioDb = await _context.InventarioServicios.FindAsync(servicio.IdServicio);
@@ -109,20 +109,8 @@ namespace Guarderia.Controllers
                         Subtotal = subtotalConDescuento
                     });
 
-                    // Actualizar stock
-                    servicioDb.StockDisponible -= servicio.Cantidad;
-
-                    // Crear movimiento de salida
-                    var movimiento = new MovimientoServicio
-                    {
-                        IdServicio = servicio.IdServicio,
-                        IdMascota = IdMascota,
-                        TipoMovimiento = "Salida",
-                        Cantidad = servicio.Cantidad,
-                        FechaMovimiento = DateTime.Now,
-                        Observaciones = "Facturación de servicio"
-                    };
-                    _context.MovimientosServicios.Add(movimiento);
+                    // NO MODIFICAR STOCK AQUÍ
+                    // El stock debe modificarse SOLO en MovimientosServicios
                 }
 
                 // Calcular IVA y total
@@ -154,7 +142,7 @@ namespace Guarderia.Controllers
                 _context.Facturas.Add(factura);
                 await _context.SaveChangesAsync();
 
-                TempData["Mensaje"] = $"Factura {numeroFactura} generada exitosamente";
+                TempData["Mensaje"] = $"Factura {numeroFactura} generada exitosamente. Recuerde registrar el movimiento de servicios correspondiente.";
                 return RedirectToAction(nameof(Detalles), new { id = factura.IdFactura });
             }
             catch (Exception ex)
@@ -227,30 +215,13 @@ namespace Guarderia.Controllers
 
             if (factura != null && factura.Estado != "Anulada")
             {
-                // Revertir stock
-                foreach (var detalle in factura.DetallesFactura)
-                {
-                    if (detalle.Servicio != null)
-                    {
-                        detalle.Servicio.StockDisponible += detalle.Cantidad;
-                    }
-
-                    // Crear movimiento de entrada
-                    var movimiento = new MovimientoServicio
-                    {
-                        IdServicio = detalle.IdServicio,
-                        IdMascota = factura.IdMascota,
-                        TipoMovimiento = "Entrada",
-                        Cantidad = detalle.Cantidad,
-                        FechaMovimiento = DateTime.Now,
-                        Observaciones = $"Anulación de factura {factura.NumeroFactura}"
-                    };
-                    _context.MovimientosServicios.Add(movimiento);
-                }
+                // NO REVERTIR STOCK AQUÍ
+                // Si se anula una factura y se necesita revertir, debe hacerse manualmente
+                // creando un Movimiento de tipo "Entrada" en MovimientosServicios
 
                 factura.Estado = "Anulada";
                 await _context.SaveChangesAsync();
-                TempData["Mensaje"] = $"Factura {factura.NumeroFactura} anulada exitosamente";
+                TempData["Mensaje"] = $"Factura {factura.NumeroFactura} anulada exitosamente. Si necesita revertir el stock, registre un movimiento de entrada.";
             }
 
             return RedirectToAction(nameof(Index));

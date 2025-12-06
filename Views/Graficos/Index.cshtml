@@ -3,50 +3,86 @@
 *@
 @{
 }
-@model IEnumerable<Guarderia.Models.InventarioServicio>
 @{
-    ViewData["Title"] = "Gráficos de Servicios";
+    ViewData["Title"] = "Gráficos por Parámetros";
 }
 
 <div class="container mt-4">
-    <h2>@ViewData["Title"]</h2>
+    <h2><i class="bi bi-bar-chart"></i> @ViewData["Title"]</h2>
     <hr />
 
-    <!-- Tabla de Servicios -->
+    <!-- Panel de Configuración -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h5><i class="bi bi-table"></i> Listado de Servicios</h5>
+            <h5><i class="bi bi-sliders"></i> Configuración de Gráfico</h5>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Servicio</th>
-                            <th>Cantidad en Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var servicio in Model)
-                        {
-                            <tr>
-                                <td>@servicio.NombreServicio</td>
-                                <td>@servicio.StockDisponible</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Tipo de Gráfico *</label>
+                    <select id="tipoGrafico" class="form-select">
+                        <option value="">-- Seleccione un tipo --</option>
+                        <option value="servicios_stock">Stock de Servicios</option>
+                        <option value="ventas_periodo">Ventas por Período</option>
+                        <option value="categorias_stock">Stock por Categoría</option>
+                        <option value="servicios_vendidos">Servicios Más Vendidos</option>
+                        <option value="cuidadores_servicios">Cuidadores - Servicios Asignados</option>
+                        <option value="movimientos_tipo">Movimientos por Tipo</option>
+                        <option value="ventas_mensuales">Ventas Mensuales (Año Actual)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input type="date" id="fechaInicio" class="form-control" />
+                    <small class="text-muted">Opcional</small>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Fecha Fin</label>
+                    <input type="date" id="fechaFin" class="form-control" />
+                    <small class="text-muted">Opcional</small>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Categoría</label>
+                    <select id="categoria" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        <option value="Baño">Baño</option>
+                        <option value="Hospedaje">Hospedaje</option>
+                        <option value="Paseo">Paseo</option>
+                        <option value="Veterinario">Veterinario</option>
+                        <option value="Estética">Estética</option>
+                    </select>
+                    <small class="text-muted">Para filtrar servicios</small>
+                </div>
+
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button type="button" id="btnGenerar" class="btn btn-primary w-100">
+                        <i class="bi bi-graph-up"></i> Generar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Gráfico de Servicios -->
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            <h5><i class="bi bi-bar-chart"></i> Gráfico de Stock de Servicios</h5>
+    <!-- Mensaje de Ayuda -->
+    <div class="alert alert-info" role="alert" id="mensajeAyuda">
+        <i class="bi bi-info-circle"></i>
+        <strong>Instrucciones:</strong> Seleccione un tipo de gráfico y haga clic en "Generar" para visualizarlo.
+        Puede aplicar filtros opcionales de fecha y categoría según el tipo de gráfico seleccionado.
+    </div>
+
+    <!-- Gráfico Dinámico Único -->
+    <div class="card mb-4" id="graficoContainer" style="display:none;">
+        <div class="card-header bg-gradient text-white" id="headerGrafico">
+            <h5 id="tituloGrafico"><i class="bi bi-graph-up"></i> Gráfico</h5>
         </div>
         <div class="card-body">
-            <canvas id="grafica_servicios" width="400" height="200"></canvas>
+            <canvas id="chartPrincipal" height="400"></canvas>
+        </div>
+        <div class="card-footer text-muted" id="infoGrafico">
+            <small><i class="bi bi-calendar"></i> Generado el: <span id="fechaGeneracion"></span></small>
         </div>
     </div>
 </div>
@@ -54,62 +90,259 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        var grafico = document.getElementById('grafica_servicios').getContext('2d');
-        var grafica_servicios = new Chart(grafico, {
-            type: 'bar',
-            data: {
-                labels: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Select(p => p.NombreServicio))),
-                datasets: [{
-                    label: 'Cantidad en Stock',
-                    data: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Select(p => p.StockDisponible))),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgb(255, 99, 132)',
-                        'rgb(54, 162, 235)',
-                        'rgb(255, 206, 86)',
-                        'rgb(75, 192, 192)',
-                        'rgb(153, 102, 255)',
-                        'rgb(255, 159, 64)'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
+        var chartActual = null;
+
+        // Configuración de colores
+        const colores = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)',
+            'rgba(83, 102, 255, 0.7)',
+            'rgba(255, 102, 146, 0.7)',
+            'rgba(102, 255, 178, 0.7)'
+        ];
+
+        const coloresBordes = colores.map(c => c.replace('0.7', '1'));
+
+        $('#btnGenerar').click(function() {
+            var tipoGrafico = $('#tipoGrafico').val();
+            var fechaInicio = $('#fechaInicio').val();
+            var fechaFin = $('#fechaFin').val();
+            var categoria = $('#categoria').val();
+
+            if (!tipoGrafico) {
+                alert('Por favor seleccione un tipo de gráfico');
+                return;
+            }
+
+            // Mostrar loading
+            $('#mensajeAyuda').html('<i class="bi bi-hourglass-split"></i> Generando gráfico...');
+
+            $.ajax({
+                url: '@Url.Action("GenerarGrafico", "Graficos")',
+                type: 'POST',
+                data: {
+                    tipoGrafico: tipoGrafico,
+                    fechaInicio: fechaInicio,
+                    fechaFin: fechaFin,
+                    categoria: categoria
+                },
+                success: function(data) {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        $('#mensajeAyuda').html('<i class="bi bi-exclamation-triangle"></i> Error al generar el gráfico: ' + data.error);
+                        return;
+                    }
+
+                    if (!data || data.length === 0) {
+                        alert('No hay datos disponibles para mostrar con los filtros seleccionados');
+                        $('#mensajeAyuda').html('<i class="bi bi-exclamation-circle"></i> No hay datos disponibles para los filtros seleccionados.');
+                        $('#graficoContainer').hide();
+                        return;
+                    }
+
+                    // Destruir gráfico anterior si existe
+                    if (chartActual) {
+                        chartActual.destroy();
+                    }
+
+                    // Ocultar mensaje de ayuda y mostrar gráfico
+                    $('#mensajeAyuda').hide();
+                    $('#graficoContainer').show();
+
+                    // Actualizar fecha de generación
+                    var ahora = new Date();
+                    $('#fechaGeneracion').text(ahora.toLocaleString('es-CO'));
+
+                    // Generar el gráfico
+                    var ctx = document.getElementById('chartPrincipal').getContext('2d');
+                    var config = generarConfiguracion(tipoGrafico, data);
+                    chartActual = new Chart(ctx, config);
+                },
+                error: function(xhr, status, error) {
+                    alert('Error al comunicarse con el servidor: ' + error);
+                    $('#mensajeAyuda').html('<i class="bi bi-exclamation-triangle"></i> Error de comunicación con el servidor.');
+                }
+            });
+        });
+
+        function generarConfiguracion(tipo, data) {
+            var config = {
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
                             display: true,
-                            text: 'Cantidad'
+                            position: 'top'
+                        },
+                        tooltip: {
+                            enabled: true
                         }
                     }
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Stock Disponible por Servicio'
-                    }
                 }
+            };
+
+            switch(tipo) {
+                case 'servicios_stock':
+                    $('#tituloGrafico').html('<i class="bi bi-box-seam"></i> Stock de Servicios');
+                    $('#headerGrafico').removeClass().addClass('card-header bg-success text-white');
+                    config.type = 'bar';
+                    config.data = {
+                        labels: data.map(d => d.nombreServicio),
+                        datasets: [{
+                            label: 'Stock Disponible',
+                            data: data.map(d => d.stockDisponible),
+                            backgroundColor: colores,
+                            borderColor: coloresBordes,
+                            borderWidth: 2
+                        }]
+                    };
+                    config.options.scales = {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Cantidad' }
+                        }
+                    };
+                    break;
+
+                case 'ventas_periodo':
+                    $('#tituloGrafico').html('<i class="bi bi-graph-up"></i> Ventas por Período');
+                    $('#headerGrafico').removeClass().addClass('card-header bg-primary text-white');
+                    config.type = 'line';
+                    config.data = {
+                        labels: data.map(d => d.fecha),
+                        datasets: [{
+                            label: 'Total Ventas ($)',
+                            data: data.map(d => d.total),
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    };
+                    config.options.scales = {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Total ($)' }
+                        }
+                    };
+                    break;
+
+                case 'categorias_stock':
+                    $('#tituloGrafico').html('<i class="bi bi-pie-chart"></i> Stock por Categoría');
+                    $('#headerGrafico').removeClass().addClass('card-header bg-info text-white');
+                    config.type = 'pie';
+                    config.data = {
+                        labels: data.map(d => d.categoria),
+                        datasets: [{
+                            label: 'Stock',
+                            data: data.map(d => d.stock),
+                            backgroundColor: colores,
+                            borderColor: coloresBordes,
+                            borderWidth: 2
+                        }]
+                    };
+                    break;
+
+                case 'servicios_vendidos':
+                    $('#tituloGrafico').html('<i class="bi bi-star"></i> Servicios Más Vendidos');
+                    $('#headerGrafico').removeClass().addClass('card-header bg-danger text-white');
+                    config.type = 'bar';
+                    config.data = {
+                        labels: data.map(d => d.servicio),
+                        datasets: [{
+                            label: 'Cantidad Vendida',
+                            data: data.map(d => d.cantidad),
+                            backgroundColor: colores,
+                            borderColor: coloresBordes,
+                            borderWidth: 2
+                        }]
+                    };
+                    config.options.indexAxis = 'y';
+                    config.options.scales = {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Cantidad' }
+                        }
+                    };
+                    break;
+
+                case 'cuidadores_servicios':
+                    $('#tituloGrafico').html('<i class="bi bi-person-badge"></i> Cuidadores - Servicios Asignados');
+                    $('#headerGrafico').removeClass().addClass('card-header bg-warning');
+                    config.type = 'bar';
+                    config.data = {
+                        labels: data.map(d => d.cuidador),
+                        datasets: [{
+                            label: 'Servicios Asignados',
+                            data: data.map(d => d.totalServicios),
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 2
+                        }]
+                    };
+                    config.options.scales = {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Cantidad de Servicios' }
+                        }
+                    };
+                    break;
+
+                case 'movimientos_tipo':
+                    $('#tituloGrafico').html('<i class="bi bi-arrow-left-right"></i> Movimientos por Tipo');
+                    $('#headerGrafico').removeClass().addClass('card-header bg-secondary text-white');
+                    config.type = 'doughnut';
+                    config.data = {
+                        labels: data.map(d => d.tipo),
+                        datasets: [{
+                            label: 'Cantidad',
+                            data: data.map(d => d.cantidad),
+                            backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(255, 99, 132, 0.7)'],
+                            borderColor: ['rgb(75, 192, 192)', 'rgb(255, 99, 132)'],
+                            borderWidth: 2
+                        }]
+                    };
+                    break;
+
+                case 'ventas_mensuales':
+                    $('#tituloGrafico').html('<i class="bi bi-calendar-month"></i> Ventas Mensuales ' + new Date().getFullYear());
+                    $('#headerGrafico').removeClass().addClass('card-header bg-dark text-white');
+                    config.type = 'line';
+                    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                    config.data = {
+                        labels: data.map(d => meses[d.mes - 1]),
+                        datasets: [{
+                            label: 'Total Ventas ($)',
+                            data: data.map(d => d.total),
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    };
+                    config.options.scales = {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Total ($)' }
+                        }
+                    };
+                    break;
             }
+
+            return config;
+        }
+
+        // Permitir regenerar gráfico al cambiar tipo
+        $('#tipoGrafico').change(function() {
+            $('#mensajeAyuda').show().html('<i class="bi bi-info-circle"></i> Haga clic en "Generar" para visualizar el gráfico seleccionado.');
         });
     </script>
 }
-
-<style>
-    #grafica_servicios {
-        max-height: 400px;
-    }
-</style>

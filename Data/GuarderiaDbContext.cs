@@ -67,6 +67,12 @@ namespace Guarderia.Data
                 .HasForeignKey(m => m.IdMascota)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<MovimientoServicio>()
+                .HasOne(m => m.Cuidador)
+                .WithMany()
+                .HasForeignKey(m => m.IdCuidador)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Datos iniciales de Servicios
             modelBuilder.Entity<InventarioServicio>().HasData(
                 new InventarioServicio
@@ -129,7 +135,7 @@ namespace Guarderia.Data
                     IdUsuario = 1,
                     Nombres = "Admin Sistema",
                     Correo = "admin@guarderia.com",
-                    Clave = "123",
+                    Clave = "admin",
                     IdRol = 1,
                     FechaRegistro = DateTime.Now
                 },

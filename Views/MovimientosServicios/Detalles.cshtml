@@ -3,7 +3,6 @@
 *@
 @{
 }
-<!-- Views/MovimientosServicios/Detalles.cshtml -->
 @model Guarderia.Models.MovimientoServicio
 @{
     ViewData["Title"] = "Detalles del Movimiento";
@@ -30,6 +29,30 @@
 
                 <dt class="col-sm-3">Cliente:</dt>
                 <dd class="col-sm-9">@Model.Mascota?.Cliente?.Nombre @Model.Mascota?.Cliente?.Apellido</dd>
+
+                <dt class="col-sm-3">Cuidador Asignado:</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Cuidador != null)
+                    {
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2">
+                                <i class="bi bi-person-badge"></i> @Model.Cuidador.Nombre @Model.Cuidador.Apellido
+                            </span>
+                            @if (Model.Cuidador.Especialidad != null)
+                            {
+                                <small class="text-muted">(@Model.Cuidador.Especialidad)</small>
+                            }
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-envelope"></i> @Model.Cuidador.Email |
+                            <i class="bi bi-telephone"></i> @Model.Cuidador.Telefono
+                        </small>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sin cuidador asignado</span>
+                    }
+                </dd>
 
                 <dt class="col-sm-3">Tipo de Movimiento:</dt>
                 <dd class="col-sm-9">

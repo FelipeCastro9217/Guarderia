@@ -66,7 +66,7 @@ namespace Guarderia.Controllers
                 decimal total = 0;
                 var detalles = new List<DetalleVentaServicio>();
 
-                // Validar stock y crear detalles
+                // Validar stock SOLAMENTE (no modificarlo aquí)
                 foreach (var servicio in servicios)
                 {
                     var servicioDb = await _context.InventarioServicios.FindAsync(servicio.IdServicio);
@@ -98,20 +98,8 @@ namespace Guarderia.Controllers
                         Subtotal = subtotal
                     });
 
-                    // Actualizar stock
-                    servicioDb.StockDisponible -= servicio.Cantidad;
-
-                    // Crear movimiento de salida
-                    var movimiento = new MovimientoServicio
-                    {
-                        IdServicio = servicio.IdServicio,
-                        IdMascota = IdMascota,
-                        TipoMovimiento = "Salida",
-                        Cantidad = servicio.Cantidad,
-                        FechaMovimiento = DateTime.Now,
-                        Observaciones = "Venta de servicio"
-                    };
-                    _context.MovimientosServicios.Add(movimiento);
+                    // NO MODIFICAR STOCK AQUÍ - Solo registrar el movimiento
+                    // El stock se modifica SOLO en MovimientosServicios
                 }
 
                 // Crear la venta
@@ -128,7 +116,7 @@ namespace Guarderia.Controllers
                 _context.VentasServicios.Add(venta);
                 await _context.SaveChangesAsync();
 
-                TempData["Mensaje"] = "Venta registrada exitosamente";
+                TempData["Mensaje"] = "Venta registrada exitosamente. Recuerde registrar el movimiento de servicios correspondiente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)

@@ -3,7 +3,6 @@
 *@
 @{
 }
-<!-- Views/MovimientosServicios/Index.cshtml -->
 @model IEnumerable<Guarderia.Models.MovimientoServicio>
 @{
     ViewData["Title"] = "Movimientos de Servicios";
@@ -42,6 +41,7 @@
                     <th>Servicio</th>
                     <th>Mascota</th>
                     <th>Cliente</th>
+                    <th>Cuidador</th>
                     <th>Tipo</th>
                     <th>Cantidad</th>
                     <th>Observaciones</th>
@@ -58,6 +58,18 @@
                         <td>@item.Mascota?.Nombre</td>
                         <td>@item.Mascota?.Cliente?.Nombre @item.Mascota?.Cliente?.Apellido</td>
                         <td>
+                            @if (item.Cuidador != null)
+                            {
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-person-badge"></i> @item.Cuidador.Nombre @item.Cuidador.Apellido
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sin asignar</span>
+                            }
+                        </td>
+                        <td>
                             @if (item.TipoMovimiento == "Entrada")
                             {
                                 <span class="badge bg-success">Entrada</span>
@@ -71,10 +83,10 @@
                         <td>@(string.IsNullOrEmpty(item.Observaciones) ? "-" : item.Observaciones)</td>
                         <td>
                             <a asp-action="Detalles" asp-route-id="@item.IdMovimiento" class="btn btn-sm btn-info" title="Ver Detalles">
-                                Detalles
+                                <i class="bi bi-eye"></i>
                             </a>
                             <a asp-action="Eliminar" asp-route-id="@item.IdMovimiento" class="btn btn-sm btn-danger" title="Eliminar">
-                                Eliminar
+                                <i class="bi bi-trash"></i>
                             </a>
                         </td>
                     </tr>

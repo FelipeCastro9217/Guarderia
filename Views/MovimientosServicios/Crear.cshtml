@@ -3,7 +3,6 @@
 *@
 @{
 }
-<!-- Views/MovimientosServicios/Crear.cshtml -->
 @model Guarderia.Models.MovimientoServicio
 @{
     ViewData["Title"] = "Registrar Movimiento";
@@ -14,16 +13,27 @@
     <hr />
 
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-10">
             <form asp-action="Crear" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                <div class="mb-3">
-                    <label asp-for="IdServicio" class="form-label">Servicio</label>
-                    <select asp-for="IdServicio" class="form-select" asp-items="ViewBag.Servicios">
-                        <option value="">-- Seleccione un servicio --</option>
-                    </select>
-                    <span asp-validation-for="IdServicio" class="text-danger"></span>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="IdServicio" class="form-label">Servicio</label>
+                        <select asp-for="IdServicio" class="form-select" asp-items="ViewBag.Servicios">
+                            <option value="">-- Seleccione un servicio --</option>
+                        </select>
+                        <span asp-validation-for="IdServicio" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="IdCuidador" class="form-label">Cuidador Asignado</label>
+                        <select asp-for="IdCuidador" class="form-select" asp-items="ViewBag.Cuidadores">
+                            <option value="">-- Opcional: Seleccione un cuidador --</option>
+                        </select>
+                        <small class="text-muted">Asigne un cuidador responsable del servicio</small>
+                        <span asp-validation-for="IdCuidador" class="text-danger"></span>
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -62,8 +72,13 @@
                 <div class="mb-3">
                     <label asp-for="Observaciones" class="form-label"></label>
                     <textarea asp-for="Observaciones" class="form-control" rows="3"
-                              placeholder="Notas adicionales sobre el movimiento"></textarea>
+                              placeholder="Notas adicionales sobre el movimiento y el cuidador asignado"></textarea>
                     <span asp-validation-for="Observaciones" class="text-danger"></span>
+                </div>
+
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Información:</strong> Al asignar un cuidador, éste será responsable de supervisar el servicio prestado a la mascota.
                 </div>
 
                 <div class="mt-4">

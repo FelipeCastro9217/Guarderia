@@ -17,6 +17,9 @@ namespace Guarderia.Models
         [Display(Name = "Mascota")]
         public int IdMascota { get; set; }
 
+        [Display(Name = "Cuidador Asignado")]
+        public int? IdCuidador { get; set; }
+
         [Required]
         [Display(Name = "Tipo de Movimiento")]
         [StringLength(20)]
@@ -39,5 +42,8 @@ namespace Guarderia.Models
 
         [ForeignKey("IdMascota")]
         public virtual Mascota? Mascota { get; set; }
+
+        [ForeignKey("IdCuidador")]
+        public virtual Cuidador? Cuidador { get; set; }
     }
 }

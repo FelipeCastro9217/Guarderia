@@ -23,6 +23,7 @@ namespace Guarderia.Controllers
                 .Include(m => m.Servicio)
                 .Include(m => m.Mascota)
                     .ThenInclude(ma => ma.Cliente)
+                .Include(m => m.Cuidador)
                 .OrderByDescending(m => m.FechaMovimiento)
                 .ToListAsync();
             return View(movimientos);
@@ -33,6 +34,7 @@ namespace Guarderia.Controllers
         {
             ViewBag.Servicios = new SelectList(_context.InventarioServicios, "IdServicio", "NombreServicio");
             ViewBag.Clientes = new SelectList(_context.Clientes, "IdCliente", "Nombre");
+            ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
             return View();
         }
 
@@ -50,9 +52,11 @@ namespace Guarderia.Controllers
                     TempData["Error"] = "El servicio seleccionado no existe";
                     ViewBag.Servicios = new SelectList(_context.InventarioServicios, "IdServicio", "NombreServicio");
                     ViewBag.Clientes = new SelectList(_context.Clientes, "IdCliente", "Nombre");
+                    ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
                     return View(movimiento);
                 }
 
+                // SOLO MODIFICAR STOCK SI ES UN MOVIMIENTO MANUAL (NO VIENE DE VENTA)
                 // Validar stock disponible para salidas
                 if (movimiento.TipoMovimiento == "Salida")
                 {
@@ -61,11 +65,12 @@ namespace Guarderia.Controllers
                         TempData["Error"] = $"Stock insuficiente. Disponible: {servicio.StockDisponible}";
                         ViewBag.Servicios = new SelectList(_context.InventarioServicios, "IdServicio", "NombreServicio");
                         ViewBag.Clientes = new SelectList(_context.Clientes, "IdCliente", "Nombre");
+                        ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
                         return View(movimiento);
                     }
                     servicio.StockDisponible -= movimiento.Cantidad;
                 }
-                else // Entrada
+                else if (movimiento.TipoMovimiento == "Entrada")
                 {
                     servicio.StockDisponible += movimiento.Cantidad;
                 }
@@ -81,6 +86,7 @@ namespace Guarderia.Controllers
 
             ViewBag.Servicios = new SelectList(_context.InventarioServicios, "IdServicio", "NombreServicio");
             ViewBag.Clientes = new SelectList(_context.Clientes, "IdCliente", "Nombre");
+            ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
             return View(movimiento);
         }
 
@@ -96,6 +102,7 @@ namespace Guarderia.Controllers
                 .Include(m => m.Servicio)
                 .Include(m => m.Mascota)
                     .ThenInclude(ma => ma.Cliente)
+                .Include(m => m.Cuidador)
                 .FirstOrDefaultAsync(m => m.IdMovimiento == id);
 
             if (movimiento == null)
@@ -118,6 +125,7 @@ namespace Guarderia.Controllers
                 .Include(m => m.Servicio)
                 .Include(m => m.Mascota)
                     .ThenInclude(ma => ma.Cliente)
+                .Include(m => m.Cuidador)
                 .FirstOrDefaultAsync(m => m.IdMovimiento == id);
 
             if (movimiento == null)
