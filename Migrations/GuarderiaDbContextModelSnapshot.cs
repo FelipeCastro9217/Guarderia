@@ -479,7 +479,7 @@ namespace Guarderia.Migrations
                         new
                         {
                             IdUsuario = 1,
-                            Clave = "123",
+                            Clave = "admin",
                             Correo = "admin@guarderia.com",
                             FechaRegistro = new DateTime(2025, 12, 5, 20, 23, 41, 55, DateTimeKind.Local).AddTicks(2413),
                             IdRol = 1,
