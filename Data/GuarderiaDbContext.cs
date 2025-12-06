@@ -1,5 +1,4 @@
 ﻿// Data/GuarderiaDbContext.cs
-// Data/GuarderiaDbContext.cs
 using Guarderia.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +18,7 @@ namespace Guarderia.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Factura> Facturas { get; set; }
         public DbSet<DetalleFactura> DetallesFacturas { get; set; }
+        public DbSet<Cuidador> Cuidadores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -67,7 +67,7 @@ namespace Guarderia.Data
                 .HasForeignKey(m => m.IdMascota)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
+            // Datos iniciales de Servicios
             modelBuilder.Entity<InventarioServicio>().HasData(
                 new InventarioServicio
                 {
@@ -115,12 +115,14 @@ namespace Guarderia.Data
                     Categoria = "Estética"
                 }
             );
-  
+
+            // Datos iniciales de Roles
             modelBuilder.Entity<Rol>().HasData(
                 new Rol { IdRol = 1, NombreRol = "Administrador", Descripcion = "Acceso total al sistema" },
                 new Rol { IdRol = 2, NombreRol = "Empleado", Descripcion = "Acceso limitado" }
             );
 
+            // Datos iniciales de Usuarios
             modelBuilder.Entity<Usuario>().HasData(
                 new Usuario
                 {
@@ -139,6 +141,32 @@ namespace Guarderia.Data
                     Clave = "123",
                     IdRol = 2,
                     FechaRegistro = DateTime.Now
+                }
+            );
+
+            // Datos iniciales de Cuidadores
+            modelBuilder.Entity<Cuidador>().HasData(
+                new Cuidador
+                {
+                    IdCuidador = 1,
+                    Nombre = "Carlos",
+                    Apellido = "Rodríguez",
+                    Telefono = "3001234567",
+                    Email = "carlos.rodriguez@guarderia.com",
+                    Especialidad = "Perros grandes",
+                    FechaContratacion = DateTime.Now.AddMonths(-12),
+                    Activo = true
+                },
+                new Cuidador
+                {
+                    IdCuidador = 2,
+                    Nombre = "María",
+                    Apellido = "López",
+                    Telefono = "3009876543",
+                    Email = "maria.lopez@guarderia.com",
+                    Especialidad = "Perros pequeños",
+                    FechaContratacion = DateTime.Now.AddMonths(-6),
+                    Activo = true
                 }
             );
         }

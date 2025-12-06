@@ -1,0 +1,223 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@{
+    ViewData["Title"] = "Eliminación de Servicios";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-trash"></i> @ViewData["Title"]</h2>
+    <hr />
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-info-circle"></i>
+        <strong>Atención:</strong> Esta funcionalidad permite devolver servicios al inventario.
+        Los servicios seleccionados aumentarán el stock disponible.
+    </div>
+
+    <form asp-action="Eliminar" method="post" id="formEliminacion">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-danger text-white">
+                        <h5>Información del Cliente y Mascota</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Cliente</label>
+                            <select name="IdCliente" id="clienteSelect" class="form-select" required asp-items="ViewBag.Clientes">
+                                <option value="">-- Seleccione un cliente --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mascota</label>
+                            <select name="IdMascota" id="mascotaSelect" class="form-select" required>
+                                <option value="">-- Primero seleccione un cliente --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h5>Seleccionar Servicios a Devolver</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Servicio</label>
+                            <select id="servicioSelect" class="form-select">
+                                <option value="">-- Seleccione un servicio --</option>
+                                @foreach (var servicio in ViewBag.Servicios)
+                                {
+                                    <option value="@servicio.IdServicio" data-nombre="@servicio.NombreServicio">
+                                        @servicio.NombreServicio (Stock actual: @servicio.StockDisponible)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad a Devolver</label>
+                            <input type="number" id="cantidadInput" class="form-control" min="1" value="1" />
+                        </div>
+
+                        <button type="button" id="btnAgregarServicio" class="btn btn-warning">
+                            <i class="bi bi-plus-circle"></i> Agregar Servicio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">
+                <h5>Servicios a Devolver</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="tablaServicios">
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th>Cantidad</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detallesServicios">
+                            <tr id="sinServicios">
+                                <td colspan="3" class="text-center text-muted">No hay servicios agregados</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="ServiciosJson" id="serviciosJson" />
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-danger btn-lg" id="btnGuardar" disabled>
+                <i class="bi bi-arrow-return-left"></i> Devolver Servicios al Inventario
+            </button>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-lg">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let servicios = [];
+
+            // Cargar mascotas al seleccionar cliente
+            $('#clienteSelect').change(function() {
+                var idCliente = $(this).val();
+                if (idCliente) {
+                    $.get('@Url.Action("ObtenerMascotasPorCliente", "Mascotas")', { idCliente: idCliente }, function(data) {
+                        var mascotaSelect = $('#mascotaSelect');
+                        mascotaSelect.empty();
+                        mascotaSelect.append('<option value="">-- Seleccione una mascota --</option>');
+                        $.each(data, function(i, mascota) {
+                            mascotaSelect.append('<option value="' + mascota.idMascota + '">' + mascota.nombre + '</option>');
+                        });
+                    });
+                } else {
+                    $('#mascotaSelect').empty().append('<option value="">-- Primero seleccione un cliente --</option>');
+                }
+            });
+
+            // Agregar servicio a la tabla
+            $('#btnAgregarServicio').click(function() {
+                var servicioSelect = $('#servicioSelect');
+                var idServicio = servicioSelect.val();
+                var nombreServicio = servicioSelect.find('option:selected').data('nombre');
+                var cantidad = parseInt($('#cantidadInput').val());
+
+                if (!idServicio) {
+                    alert('Seleccione un servicio');
+                    return;
+                }
+
+                if (cantidad <= 0) {
+                    alert('La cantidad debe ser mayor a 0');
+                    return;
+                }
+
+                // Verificar si ya existe el servicio
+                var existe = servicios.find(s => s.IdServicio == idServicio);
+                if (existe) {
+                    alert('El servicio ya fue agregado. Elimínelo si desea cambiar la cantidad.');
+                    return;
+                }
+
+                servicios.push({
+                    IdServicio: parseInt(idServicio),
+                    Cantidad: cantidad
+                });
+
+                // Remover mensaje "sin servicios"
+                $('#sinServicios').remove();
+
+                // Agregar fila a la tabla
+                var fila = '<tr data-id="' + idServicio + '">' +
+                    '<td>' + nombreServicio + '</td>' +
+                    '<td>' + cantidad + '</td>' +
+                    '<td><button type="button" class="btn btn-sm btn-danger btnEliminar" data-id="' + idServicio + '"><i class="bi bi-trash"></i></button></td>' +
+                    '</tr>';
+                $('#detallesServicios').append(fila);
+
+                // Actualizar campo hidden
+                $('#serviciosJson').val(JSON.stringify(servicios));
+
+                // Habilitar botón guardar
+                $('#btnGuardar').prop('disabled', false);
+
+                // Limpiar selección
+                servicioSelect.val('');
+                $('#cantidadInput').val(1);
+            });
+
+            // Eliminar servicio de la tabla
+            $(document).on('click', '.btnEliminar', function() {
+                var idServicio = $(this).data('id');
+
+                // Eliminar del array
+                servicios = servicios.filter(s => s.IdServicio != idServicio);
+
+                // Eliminar fila
+                $(this).closest('tr').remove();
+
+                // Actualizar campo hidden
+                $('#serviciosJson').val(JSON.stringify(servicios));
+
+                // Si no hay servicios, mostrar mensaje y deshabilitar botón
+                if (servicios.length === 0) {
+                    $('#detallesServicios').append('<tr id="sinServicios"><td colspan="3" class="text-center text-muted">No hay servicios agregados</td></tr>');
+                    $('#btnGuardar').prop('disabled', true);
+                }
+            });
+        });
+    </script>
+}

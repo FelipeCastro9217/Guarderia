@@ -72,6 +72,15 @@
                                             <i class="bi bi-arrow-left-right"></i> Movimiento Servicios
                                         </a>
                                     </li>
+                                    @if (User.IsInRole("1"))
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Cuidadores" asp-action="Index">
+                                                <i class="bi bi-person-badge"></i> Cuidadores
+                                            </a>
+                                        </li>
+                                    }
                                 </ul>
                             </li>
 
@@ -97,6 +106,12 @@
                                     }
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
+                                        <a class="dropdown-item" asp-controller="EliminacionServicios" asp-action="Index">
+                                            <i class="bi bi-trash"></i> Eliminación Servicios
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
                                         <a class="dropdown-item" asp-controller="Facturas" asp-action="Index">
                                             <i class="bi bi-receipt-cutoff"></i> Facturas
                                         </a>
@@ -112,25 +127,28 @@
                                 </ul>
                             </li>
 
-                            <!-- Menú Reportes -->
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarReportes" role="button"
-                                   data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-graph-up"></i> Reportes
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="navbarReportes">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Reportes" asp-action="Index">
-                                            <i class="bi bi-file-earmark-text"></i> Informes
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Graficos" asp-action="Index">
-                                            <i class="bi bi-bar-chart"></i> Gráficos
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
+                            <!-- Menú Reportes - Solo Administrador -->
+                            @if (User.IsInRole("1"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarReportes" role="button"
+                                       data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-graph-up"></i> Reportes
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarReportes">
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Reportes" asp-action="Index">
+                                                <i class="bi bi-file-earmark-text"></i> Informes PDF
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Graficos" asp-action="Index">
+                                                <i class="bi bi-bar-chart"></i> Gráficos
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
                         </ul>
                         <ul class="navbar-nav ms-auto">
                             <li class="nav-item">

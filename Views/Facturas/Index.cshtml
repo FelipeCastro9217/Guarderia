@@ -88,13 +88,13 @@
                                 <td>
                                     <a asp-action="Detalles" asp-route-id="@factura.IdFactura"
                                        class="btn btn-sm btn-info" title="Ver Detalles">
-                                        <i class="bi bi-eye"></i>
+                                        Detalles
                                     </a>
                                     @if (User.IsInRole("1") && factura.Estado != "Anulada")
                                     {
                                         <a asp-action="Anular" asp-route-id="@factura.IdFactura"
                                            class="btn btn-sm btn-danger" title="Anular Factura">
-                                            <i class="bi bi-x-circle"></i>
+                                            Anular
                                         </a>
                                     }
                                 </td>

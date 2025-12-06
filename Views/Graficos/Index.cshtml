@@ -3,96 +3,50 @@
 *@
 @{
 }
-<!-- Views/Graficos/Index.cshtml -->
+@model IEnumerable<Guarderia.Models.InventarioServicio>
 @{
-    ViewData["Title"] = "Gráficos por Parámetros";
+    ViewData["Title"] = "Gráficos de Servicios";
 }
 
 <div class="container mt-4">
     <h2>@ViewData["Title"]</h2>
     <hr />
 
+    <!-- Tabla de Servicios -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h5><i class="bi bi-bar-chart"></i> Configuración de Gráfico</h5>
+            <h5><i class="bi bi-table"></i> Listado de Servicios</h5>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Tipo de Gráfico</label>
-                    <select id="tipoGrafico" class="form-select">
-                        <option value="">-- Seleccione --</option>
-                        <option value="ventas">Ventas por Fecha</option>
-                        <option value="servicios">Servicios Más Vendidos</option>
-                        <option value="categorias">Stock por Categoría</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Fecha Inicio</label>
-                    <input type="date" id="fechaInicio" class="form-control" />
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Fecha Fin</label>
-                    <input type="date" id="fechaFin" class="form-control" />
-                </div>
-
-                <div class="col-md-2 mb-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="button" id="btnGenerarGrafico" class="btn btn-primary w-100">
-                        <i class="bi bi-graph-up"></i> Generar
-                    </button>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Cantidad en Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var servicio in Model)
+                        {
+                            <tr>
+                                <td>@servicio.NombreServicio</td>
+                                <td>@servicio.StockDisponible</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Gráficos predefinidos -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5>Ventas por Mes (Año Actual)</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartVentasMes" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5>Top 5 Servicios Más Vendidos</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartServiciosTop" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-warning">
-                    <h5>Stock por Categoría</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="chartCategorias" height="100"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Canvas para gráfico dinámico -->
-    <div class="card mt-4" id="graficoDinamico" style="display:none;">
-        <div class="card-header bg-primary text-white">
-            <h5 id="tituloGraficoDinamico">Gráfico Generado</h5>
+    <!-- Gráfico de Servicios -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5><i class="bi bi-bar-chart"></i> Gráfico de Stock de Servicios</h5>
         </div>
         <div class="card-body">
-            <canvas id="chartDinamico" height="100"></canvas>
+            <canvas id="grafica_servicios" width="400" height="200"></canvas>
         </div>
     </div>
 </div>
@@ -100,88 +54,29 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Datos del servidor
-        var ventasPorMes = @Html.Raw(Json.Serialize(ViewBag.VentasPorMes));
-        var serviciosMasVendidos = @Html.Raw(Json.Serialize(ViewBag.ServiciosMasVendidos));
-        var categorias = @Html.Raw(Json.Serialize(ViewBag.Categorias));
-
-        // Configuración común de gráficos
-        Chart.defaults.font.size = 14;
-
-        // Gráfico Ventas por Mes
-        var ctxVentasMes = document.getElementById('chartVentasMes').getContext('2d');
-        var chartVentasMes = new Chart(ctxVentasMes, {
-            type: 'line',
-            data: {
-                labels: ventasPorMes.map(v => {
-                    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                    return meses[v.mes - 1];
-                }),
-                datasets: [{
-                    label: 'Total Ventas ($)',
-                    data: ventasPorMes.map(v => v.total),
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1,
-                    fill: true
-                }, {
-                    label: 'Cantidad Ventas',
-                    data: ventasPorMes.map(v => v.cantidad),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    tension: 0.1,
-                    yAxisID: 'y1'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Total ($)'
-                        }
-                    },
-                    y1: {
-                        beginAtZero: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Cantidad'
-                        },
-                        grid: {
-                            drawOnChartArea: false
-                        }
-                    }
-                }
-            }
-        });
-
-        // Gráfico Servicios Más Vendidos
-        var ctxServiciosTop = document.getElementById('chartServiciosTop').getContext('2d');
-        var chartServiciosTop = new Chart(ctxServiciosTop, {
+        var grafico = document.getElementById('grafica_servicios').getContext('2d');
+        var grafica_servicios = new Chart(grafico, {
             type: 'bar',
             data: {
-                labels: serviciosMasVendidos.map(s => s.servicio),
+                labels: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Select(p => p.NombreServicio))),
                 datasets: [{
-                    label: 'Cantidad Vendida',
-                    data: serviciosMasVendidos.map(s => s.cantidad),
+                    label: 'Cantidad en Stock',
+                    data: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Select(p => p.StockDisponible))),
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.7)',
                         'rgba(54, 162, 235, 0.7)',
                         'rgba(255, 206, 86, 0.7)',
                         'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)'
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
                     ],
                     borderColor: [
                         'rgb(255, 99, 132)',
                         'rgb(54, 162, 235)',
                         'rgb(255, 206, 86)',
                         'rgb(75, 192, 192)',
-                        'rgb(153, 102, 255)'
+                        'rgb(153, 102, 255)',
+                        'rgb(255, 159, 64)'
                     ],
                     borderWidth: 2
                 }]
@@ -197,160 +92,24 @@
                             text: 'Cantidad'
                         }
                     }
-                }
-            }
-        });
-
-        // Gráfico Categorías
-        var ctxCategorias = document.getElementById('chartCategorias').getContext('2d');
-        var chartCategorias = new Chart(ctxCategorias, {
-            type: 'doughnut',
-            data: {
-                labels: categorias.map(c => c.categoria),
-                datasets: [{
-                    label: 'Stock Disponible',
-                    data: categorias.map(c => c.stock),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                },
                 plugins: {
                     legend: {
-                        position: 'right'
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Stock Disponible por Servicio'
                     }
                 }
             }
-        });
-
-        // Gráfico dinámico
-        var chartDinamico;
-        $('#btnGenerarGrafico').click(function() {
-            var tipoGrafico = $('#tipoGrafico').val();
-            var fechaInicio = $('#fechaInicio').val();
-            var fechaFin = $('#fechaFin').val();
-
-            if (!tipoGrafico) {
-                alert('Seleccione un tipo de gráfico');
-                return;
-            }
-
-            $.ajax({
-                url: '@Url.Action("ObtenerDatosGrafico", "Graficos")',
-                type: 'POST',
-                data: {
-                    tipoGrafico: tipoGrafico,
-                    fechaInicio: fechaInicio,
-                    fechaFin: fechaFin
-                },
-                success: function(data) {
-                    if (data.error) {
-                        alert('Error: ' + data.error);
-                        return;
-                    }
-
-                    // Destruir gráfico anterior si existe
-                    if (chartDinamico) {
-                        chartDinamico.destroy();
-                    }
-
-                    // Mostrar contenedor
-                    $('#graficoDinamico').show();
-
-                    var ctx = document.getElementById('chartDinamico').getContext('2d');
-                    var config = {};
-
-                    switch(tipoGrafico) {
-                        case 'ventas':
-                            $('#tituloGraficoDinamico').text('Ventas por Fecha');
-                            config = {
-                                type: 'line',
-                                data: {
-                                    labels: data.map(d => d.fecha),
-                                    datasets: [{
-                                        label: 'Total Ventas ($)',
-                                        data: data.map(d => d.total),
-                                        borderColor: 'rgb(75, 192, 192)',
-                                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                        tension: 0.4,
-                                        fill: true
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    scales: {
-                                        y: { beginAtZero: true }
-                                    }
-                                }
-                            };
-                            break;
-
-                        case 'servicios':
-                            $('#tituloGraficoDinamico').text('Servicios Más Vendidos');
-                            config = {
-                                type: 'bar',
-                                data: {
-                                    labels: data.map(d => d.servicio),
-                                    datasets: [{
-                                        label: 'Cantidad',
-                                        data: data.map(d => d.cantidad),
-                                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                                        borderColor: 'rgb(54, 162, 235)',
-                                        borderWidth: 2
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    indexAxis: 'y',
-                                    scales: {
-                                        x: { beginAtZero: true }
-                                    }
-                                }
-                            };
-                            break;
-
-                        case 'categorias':
-                            $('#tituloGraficoDinamico').text('Stock por Categoría');
-                            config = {
-                                type: 'pie',
-                                data: {
-                                    labels: data.map(d => d.categoria),
-                                    datasets: [{
-                                        data: data.map(d => d.stock),
-                                        backgroundColor: [
-                                            'rgba(255, 99, 132, 0.7)',
-                                            'rgba(54, 162, 235, 0.7)',
-                                            'rgba(255, 206, 86, 0.7)',
-                                            'rgba(75, 192, 192, 0.7)',
-                                            'rgba(153, 102, 255, 0.7)',
-                                            'rgba(255, 159, 64, 0.7)'
-                                        ]
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false
-                                }
-                            };
-                            break;
-                    }
-
-                    chartDinamico = new Chart(ctx, config);
-                },
-                error: function() {
-                    alert('Error al obtener los datos');
-                }
-            });
         });
     </script>
 }
+
+<style>
+    #grafica_servicios {
+        max-height: 400px;
+    }
+</style>

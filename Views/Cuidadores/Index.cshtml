@@ -3,10 +3,9 @@
 *@
 @{
 }
-<!-- Views/MovimientosServicios/Index.cshtml -->
-@model IEnumerable<Guarderia.Models.MovimientoServicio>
+@model IEnumerable<Guarderia.Models.Cuidador>
 @{
-    ViewData["Title"] = "Movimientos de Servicios";
+    ViewData["Title"] = "Gestión de Cuidadores";
 }
 
 <div class="container mt-4">
@@ -29,7 +28,7 @@
 
     <p>
         <a asp-action="Crear" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Movimiento
+            <i class="bi bi-plus-circle"></i> Nuevo Cuidador
         </a>
     </p>
 
@@ -38,13 +37,12 @@
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Fecha</th>
-                    <th>Servicio</th>
-                    <th>Mascota</th>
-                    <th>Cliente</th>
-                    <th>Tipo</th>
-                    <th>Cantidad</th>
-                    <th>Observaciones</th>
+                    <th>Nombre Completo</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Especialidad</th>
+                    <th>Fecha Contratación</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -52,28 +50,30 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>@item.IdMovimiento</td>
-                        <td>@item.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@item.Servicio?.NombreServicio</td>
-                        <td>@item.Mascota?.Nombre</td>
-                        <td>@item.Mascota?.Cliente?.Nombre @item.Mascota?.Cliente?.Apellido</td>
+                        <td>@item.IdCuidador</td>
+                        <td>@item.Nombre @item.Apellido</td>
+                        <td>@item.Telefono</td>
+                        <td>@item.Email</td>
+                        <td>@(item.Especialidad ?? "N/A")</td>
+                        <td>@item.FechaContratacion.ToString("dd/MM/yyyy")</td>
                         <td>
-                            @if (item.TipoMovimiento == "Entrada")
+                            @if (item.Activo)
                             {
-                                <span class="badge bg-success">Entrada</span>
+                                <span class="badge bg-success">Activo</span>
                             }
                             else
                             {
-                                <span class="badge bg-danger">Salida</span>
+                                <span class="badge bg-danger">Inactivo</span>
                             }
                         </td>
-                        <td>@item.Cantidad</td>
-                        <td>@(string.IsNullOrEmpty(item.Observaciones) ? "-" : item.Observaciones)</td>
                         <td>
-                            <a asp-action="Detalles" asp-route-id="@item.IdMovimiento" class="btn btn-sm btn-info" title="Ver Detalles">
+                            <a asp-action="Detalles" asp-route-id="@item.IdCuidador" class="btn btn-sm btn-info" title="Ver Detalles">
                                 Detalles
                             </a>
-                            <a asp-action="Eliminar" asp-route-id="@item.IdMovimiento" class="btn btn-sm btn-danger" title="Eliminar">
+                            <a asp-action="Editar" asp-route-id="@item.IdCuidador" class="btn btn-sm btn-warning" title="Editar">
+                                Editar
+                            </a>
+                            <a asp-action="Eliminar" asp-route-id="@item.IdCuidador" class="btn btn-sm btn-danger" title="Eliminar">
                                 Eliminar
                             </a>
                         </td>
