@@ -56,9 +56,19 @@ namespace Guarderia.Controllers
                     return View(movimiento);
                 }
 
-                // SOLO MODIFICAR STOCK SI ES SALIDA (cuando el servicio se usa realmente)
-                if (movimiento.TipoMovimiento == "Salida")
+                movimiento.FechaMovimiento = DateTime.Now;
+
+                if (movimiento.TipoMovimiento == "Entrada")
                 {
+                    // ENTRADA: No modifica stock, estado "En Proceso"
+                    movimiento.EstadoServicio = "En Proceso";
+                    movimiento.FechaCompletado = null;
+
+                    TempData["Mensaje"] = "Movimiento de Entrada registrado. El stock NO se ha modificado. Complete el servicio para generar la salida automática.";
+                }
+                else if (movimiento.TipoMovimiento == "Salida")
+                {
+                    // SALIDA: Reduce stock, estado "Pendiente"
                     if (servicio.StockDisponible < movimiento.Cantidad)
                     {
                         TempData["Error"] = $"Stock insuficiente. Disponible: {servicio.StockDisponible}";
@@ -67,23 +77,17 @@ namespace Guarderia.Controllers
                         ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
                         return View(movimiento);
                     }
+
                     servicio.StockDisponible -= movimiento.Cantidad;
                     movimiento.EstadoServicio = "Pendiente";
-                }
-                else if (movimiento.TipoMovimiento == "Entrada")
-                {
-                    // Solo aumentar stock en casos de entrada (devoluciones, compras)
-                    servicio.StockDisponible += movimiento.Cantidad;
-                    movimiento.EstadoServicio = "Completado";
-                    movimiento.FechaCompletado = DateTime.Now;
+
+                    _context.Update(servicio);
+                    TempData["Mensaje"] = "Movimiento de Salida registrado. El stock ha sido reducido.";
                 }
 
-                movimiento.FechaMovimiento = DateTime.Now;
                 _context.Add(movimiento);
-                _context.Update(servicio);
                 await _context.SaveChangesAsync();
 
-                TempData["Mensaje"] = "Movimiento registrado exitosamente";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -97,16 +101,13 @@ namespace Guarderia.Controllers
         [HttpPost]
         public async Task<IActionResult> CompletarServicio(int id)
         {
-            var movimiento = await _context.MovimientosServicios.FindAsync(id);
+            var movimiento = await _context.MovimientosServicios
+                .Include(m => m.Servicio)
+                .FirstOrDefaultAsync(m => m.IdMovimiento == id);
 
             if (movimiento == null)
             {
                 return Json(new { success = false, message = "Movimiento no encontrado" });
-            }
-
-            if (movimiento.TipoMovimiento != "Salida")
-            {
-                return Json(new { success = false, message = "Solo se pueden completar servicios de tipo Salida" });
             }
 
             if (movimiento.EstadoServicio == "Completado")
@@ -114,12 +115,58 @@ namespace Guarderia.Controllers
                 return Json(new { success = false, message = "El servicio ya está completado" });
             }
 
+            // Marcar como completado
             movimiento.EstadoServicio = "Completado";
             movimiento.FechaCompletado = DateTime.Now;
 
-            await _context.SaveChangesAsync();
+            // Si es tipo ENTRADA, crear automáticamente la SALIDA
+            if (movimiento.TipoMovimiento == "Entrada")
+            {
+                // Verificar stock disponible
+                var servicio = movimiento.Servicio;
+                if (servicio.StockDisponible < movimiento.Cantidad)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Stock insuficiente para generar la salida. Disponible: {servicio.StockDisponible}, Requerido: {movimiento.Cantidad}"
+                    });
+                }
 
-            return Json(new { success = true, message = "Servicio completado exitosamente" });
+                // Crear el movimiento de SALIDA automático
+                var movimientoSalida = new MovimientoServicio
+                {
+                    IdServicio = movimiento.IdServicio,
+                    IdMascota = movimiento.IdMascota,
+                    IdCuidador = movimiento.IdCuidador,
+                    TipoMovimiento = "Salida",
+                    Cantidad = movimiento.Cantidad,
+                    FechaMovimiento = DateTime.Now,
+                    EstadoServicio = "Completado",
+                    FechaCompletado = DateTime.Now,
+                    Observaciones = $"Salida automática generada al completar Entrada #{movimiento.IdMovimiento}"
+                };
+
+                // Reducir el stock
+                servicio.StockDisponible -= movimiento.Cantidad;
+
+                _context.MovimientosServicios.Add(movimientoSalida);
+                _context.Update(servicio);
+
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Entrada completada. Se generó automáticamente la Salida y se redujo el stock en {movimiento.Cantidad} unidades."
+                });
+            }
+            else
+            {
+                // Es una SALIDA normal, solo marcar como completado
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Servicio de Salida completado exitosamente" });
+            }
         }
 
         // GET: AsignarCuidador
@@ -168,11 +215,6 @@ namespace Guarderia.Controllers
             }
 
             movimiento.IdCuidador = IdCuidador;
-
-            if (movimiento.EstadoServicio == "Pendiente")
-            {
-                movimiento.EstadoServicio = "En Proceso";
-            }
 
             await _context.SaveChangesAsync();
 
@@ -237,19 +279,21 @@ namespace Guarderia.Controllers
 
             if (movimiento != null)
             {
-                // Revertir el movimiento en el inventario
+                // SOLO revertir stock si es SALIDA
                 if (movimiento.TipoMovimiento == "Salida")
                 {
                     movimiento.Servicio.StockDisponible += movimiento.Cantidad;
+                    _context.Update(movimiento.Servicio);
+                    TempData["Mensaje"] = $"Movimiento de Salida eliminado. Se devolvieron {movimiento.Cantidad} unidades al stock.";
                 }
                 else
                 {
-                    movimiento.Servicio.StockDisponible -= movimiento.Cantidad;
+                    // Es ENTRADA, no se modifica stock
+                    TempData["Mensaje"] = "Movimiento de Entrada eliminado. El stock NO fue modificado.";
                 }
 
                 _context.MovimientosServicios.Remove(movimiento);
                 await _context.SaveChangesAsync();
-                TempData["Mensaje"] = "Movimiento eliminado y stock actualizado";
             }
 
             return RedirectToAction(nameof(Index));

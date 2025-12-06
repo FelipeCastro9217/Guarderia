@@ -113,7 +113,7 @@ namespace Guarderia.Migrations
                             Apellido = "Rodríguez",
                             Email = "carlos.rodriguez@guarderia.com",
                             Especialidad = "Perros grandes",
-                            FechaContratacion = new DateTime(2024, 12, 6, 18, 21, 59, 900, DateTimeKind.Local).AddTicks(8088),
+                            FechaContratacion = new DateTime(2024, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9653),
                             Nombre = "Carlos",
                             Telefono = "3001234567"
                         },
@@ -124,7 +124,7 @@ namespace Guarderia.Migrations
                             Apellido = "López",
                             Email = "maria.lopez@guarderia.com",
                             Especialidad = "Perros pequeños",
-                            FechaContratacion = new DateTime(2025, 6, 6, 18, 21, 59, 900, DateTimeKind.Local).AddTicks(8118),
+                            FechaContratacion = new DateTime(2025, 6, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9692),
                             Nombre = "María",
                             Telefono = "3009876543"
                         });
@@ -494,7 +494,7 @@ namespace Guarderia.Migrations
                             IdUsuario = 1,
                             Clave = "admin",
                             Correo = "admin@guarderia.com",
-                            FechaRegistro = new DateTime(2025, 12, 6, 18, 21, 59, 900, DateTimeKind.Local).AddTicks(7995),
+                            FechaRegistro = new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9556),
                             IdRol = 1,
                             Nombres = "Admin Sistema"
                         },
@@ -503,7 +503,7 @@ namespace Guarderia.Migrations
                             IdUsuario = 2,
                             Clave = "123",
                             Correo = "empleado@guarderia.com",
-                            FechaRegistro = new DateTime(2025, 12, 6, 18, 21, 59, 900, DateTimeKind.Local).AddTicks(8016),
+                            FechaRegistro = new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9583),
                             IdRol = 2,
                             Nombres = "Empleado Uno"
                         });

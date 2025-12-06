@@ -32,6 +32,25 @@ namespace Guarderia.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Cuidadores",
+                columns: table => new
+                {
+                    IdCuidador = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Apellido = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Telefono = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Especialidad = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    FechaContratacion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cuidadores", x => x.IdCuidador);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InventarioServicios",
                 columns: table => new
                 {
@@ -151,14 +170,23 @@ namespace Guarderia.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IdServicio = table.Column<int>(type: "int", nullable: false),
                     IdMascota = table.Column<int>(type: "int", nullable: false),
+                    IdCuidador = table.Column<int>(type: "int", nullable: true),
                     TipoMovimiento = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Cantidad = table.Column<int>(type: "int", nullable: false),
                     FechaMovimiento = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Observaciones = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                    Observaciones = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    EstadoServicio = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FechaCompletado = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MovimientosServicios", x => x.IdMovimiento);
+                    table.ForeignKey(
+                        name: "FK_MovimientosServicios_Cuidadores_IdCuidador",
+                        column: x => x.IdCuidador,
+                        principalTable: "Cuidadores",
+                        principalColumn: "IdCuidador",
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "FK_MovimientosServicios_InventarioServicios_IdServicio",
                         column: x => x.IdServicio,
@@ -262,6 +290,15 @@ namespace Guarderia.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Cuidadores",
+                columns: new[] { "IdCuidador", "Activo", "Apellido", "Email", "Especialidad", "FechaContratacion", "Nombre", "Telefono" },
+                values: new object[,]
+                {
+                    { 1, true, "Rodríguez", "carlos.rodriguez@guarderia.com", "Perros grandes", new DateTime(2024, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9653), "Carlos", "3001234567" },
+                    { 2, true, "López", "maria.lopez@guarderia.com", "Perros pequeños", new DateTime(2025, 6, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9692), "María", "3009876543" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "InventarioServicios",
                 columns: new[] { "IdServicio", "Categoria", "Descripcion", "NombreServicio", "PrecioUnitario", "StockDisponible" },
                 values: new object[,]
@@ -287,8 +324,8 @@ namespace Guarderia.Migrations
                 columns: new[] { "IdUsuario", "Clave", "Correo", "FechaRegistro", "IdRol", "Nombres" },
                 values: new object[,]
                 {
-                    { 1, "123", "admin@guarderia.com", new DateTime(2025, 12, 5, 19, 5, 56, 993, DateTimeKind.Local).AddTicks(4978), 1, "Admin Sistema" },
-                    { 2, "123", "empleado@guarderia.com", new DateTime(2025, 12, 5, 19, 5, 56, 993, DateTimeKind.Local).AddTicks(4999), 2, "Empleado Uno" }
+                    { 1, "admin", "admin@guarderia.com", new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9556), 1, "Admin Sistema" },
+                    { 2, "123", "empleado@guarderia.com", new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9583), 2, "Empleado Uno" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -325,6 +362,11 @@ namespace Guarderia.Migrations
                 name: "IX_Mascotas_IdCliente",
                 table: "Mascotas",
                 column: "IdCliente");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MovimientosServicios_IdCuidador",
+                table: "MovimientosServicios",
+                column: "IdCuidador");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MovimientosServicios_IdMascota",
@@ -372,6 +414,9 @@ namespace Guarderia.Migrations
 
             migrationBuilder.DropTable(
                 name: "VentasServicios");
+
+            migrationBuilder.DropTable(
+                name: "Cuidadores");
 
             migrationBuilder.DropTable(
                 name: "InventarioServicios");

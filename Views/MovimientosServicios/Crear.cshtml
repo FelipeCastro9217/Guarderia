@@ -12,6 +12,23 @@
     <h2>@ViewData["Title"]</h2>
     <hr />
 
+    <!-- Alertas informativas -->
+    <div class="alert alert-info" role="alert">
+        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Importante sobre el Stock</h5>
+        <hr>
+        <p class="mb-2"><strong>Movimiento de ENTRADA:</strong></p>
+        <ul class="mb-2">
+            <li>NO modifica el stock del inventario al crearse</li>
+            <li>El estado será automáticamente "En Proceso"</li>
+            <li>Al marcar como "Completado", se generará automáticamente una SALIDA que SÍ reducirá el stock</li>
+        </ul>
+        <p class="mb-2"><strong>Movimiento de SALIDA:</strong></p>
+        <ul class="mb-0">
+            <li>REDUCE el stock del inventario inmediatamente</li>
+            <li>El estado será "Pendiente" hasta que se complete</li>
+        </ul>
+    </div>
+
     <div class="row">
         <div class="col-md-10">
             <form asp-action="Crear" method="post">
@@ -19,8 +36,8 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="IdServicio" class="form-label">Servicio</label>
-                        <select asp-for="IdServicio" class="form-select" asp-items="ViewBag.Servicios">
+                        <label asp-for="IdServicio" class="form-label">Servicio *</label>
+                        <select asp-for="IdServicio" class="form-select" asp-items="ViewBag.Servicios" required>
                             <option value="">-- Seleccione un servicio --</option>
                         </select>
                         <span asp-validation-for="IdServicio" class="text-danger"></span>
@@ -37,15 +54,15 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Cliente</label>
-                    <select id="clienteSelect" class="form-select" asp-items="ViewBag.Clientes">
+                    <label class="form-label">Cliente *</label>
+                    <select id="clienteSelect" class="form-select" asp-items="ViewBag.Clientes" required>
                         <option value="">-- Seleccione un cliente --</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="IdMascota" class="form-label">Mascota</label>
-                    <select asp-for="IdMascota" id="mascotaSelect" class="form-select">
+                    <label asp-for="IdMascota" class="form-label">Mascota *</label>
+                    <select asp-for="IdMascota" id="mascotaSelect" class="form-select" required>
                         <option value="">-- Primero seleccione un cliente --</option>
                     </select>
                     <span asp-validation-for="IdMascota" class="text-danger"></span>
@@ -53,37 +70,44 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="TipoMovimiento" class="form-label"></label>
-                        <select asp-for="TipoMovimiento" class="form-select">
+                        <label asp-for="TipoMovimiento" class="form-label">Tipo de Movimiento *</label>
+                        <select asp-for="TipoMovimiento" class="form-select" id="tipoMovimiento" required>
                             <option value="">-- Seleccione --</option>
-                            <option value="Entrada">Entrada</option>
-                            <option value="Salida">Salida</option>
+                            <option value="Entrada">Entrada (NO modifica stock)</option>
+                            <option value="Salida">Salida (REDUCE stock)</option>
                         </select>
                         <span asp-validation-for="TipoMovimiento" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Cantidad" class="form-label"></label>
-                        <input asp-for="Cantidad" class="form-control" type="number" min="1" />
+                        <label asp-for="Cantidad" class="form-label">Cantidad *</label>
+                        <input asp-for="Cantidad" class="form-control" type="number" min="1" required />
                         <span asp-validation-for="Cantidad" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Observaciones" class="form-label"></label>
+                    <label asp-for="Observaciones" class="form-label">Observaciones</label>
                     <textarea asp-for="Observaciones" class="form-control" rows="3"
-                              placeholder="Notas adicionales sobre el movimiento y el cuidador asignado"></textarea>
+                              placeholder="Notas adicionales sobre el movimiento"></textarea>
                     <span asp-validation-for="Observaciones" class="text-danger"></span>
                 </div>
 
-                <div class="alert alert-info" role="alert">
-                    <i class="bi bi-info-circle"></i>
-                    <strong>Información:</strong> Al asignar un cuidador, éste será responsable de supervisar el servicio prestado a la mascota.
+                <!-- Alerta dinámica según tipo de movimiento -->
+                <div class="alert alert-warning d-none" role="alert" id="alertaEntrada">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Movimiento de ENTRADA:</strong> El stock NO se modificará al crear este movimiento.
+                    Debe completar el servicio para que se genere la salida automática.
+                </div>
+
+                <div class="alert alert-danger d-none" role="alert" id="alertaSalida">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Movimiento de SALIDA:</strong> El stock se REDUCIRÁ inmediatamente al crear este movimiento.
                 </div>
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Guardar
+                        <i class="bi bi-save"></i> Guardar Movimiento
                     </button>
                     <a asp-action="Index" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Volver
@@ -100,6 +124,7 @@
     }
     <script>
         $(document).ready(function() {
+            // Cargar mascotas al seleccionar cliente
             $('#clienteSelect').change(function() {
                 var idCliente = $(this).val();
                 if (idCliente) {
@@ -113,6 +138,18 @@
                     });
                 } else {
                     $('#mascotaSelect').empty().append('<option value="">-- Primero seleccione un cliente --</option>');
+                }
+            });
+
+            // Mostrar alerta según tipo de movimiento
+            $('#tipoMovimiento').change(function() {
+                var tipo = $(this).val();
+                $('#alertaEntrada, #alertaSalida').addClass('d-none');
+
+                if (tipo === 'Entrada') {
+                    $('#alertaEntrada').removeClass('d-none');
+                } else if (tipo === 'Salida') {
+                    $('#alertaSalida').removeClass('d-none');
                 }
             });
         });

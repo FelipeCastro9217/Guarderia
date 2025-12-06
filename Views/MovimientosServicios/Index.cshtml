@@ -14,17 +14,27 @@
     @if (TempData["Mensaje"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Mensaje"]
+            <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
+
+    <!-- Información del sistema -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Gestión de Stock</h6>
+        <small>
+            <strong>Entrada:</strong> NO modifica stock al crearse. Al completar, genera Salida automática.<br>
+            <strong>Salida:</strong> REDUCE stock al crearse. Solo se puede revertir eliminando el movimiento.
+        </small>
+    </div>
 
     <p>
         <a asp-action="Crear" class="btn btn-primary">
@@ -53,7 +63,10 @@
                     <tr>
                         <td>@item.IdMovimiento</td>
                         <td>@item.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@item.Servicio?.NombreServicio</td>
+                        <td>
+                            <strong>@item.Servicio?.NombreServicio</strong><br>
+                            <small class="text-muted">Stock actual: @item.Servicio?.StockDisponible</small>
+                        </td>
                         <td>
                             <strong>@item.Mascota?.Nombre</strong><br>
                             <small class="text-muted">@item.Mascota?.Cliente?.Nombre @item.Mascota?.Cliente?.Apellido</small>
@@ -65,7 +78,7 @@
                                     <i class="bi bi-person-badge"></i> @item.Cuidador.Nombre @item.Cuidador.Apellido
                                 </span>
                             }
-                            else if (item.TipoMovimiento == "Salida")
+                            else if (item.TipoMovimiento == "Salida" || item.TipoMovimiento == "Entrada")
                             {
                                 <a asp-action="AsignarCuidador" asp-route-id="@item.IdMovimiento"
                                    class="btn btn-sm btn-outline-warning" title="Asignar Cuidador">
@@ -80,11 +93,21 @@
                         <td>
                             @if (item.TipoMovimiento == "Entrada")
                             {
-                                <span class="badge bg-success">Entrada</span>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-arrow-down-circle"></i> Entrada
+                                </span>
+                                <br>
+
+                                <small class="text-muted">Sin efecto en stock</small>
                             }
                             else
                             {
-                                <span class="badge bg-danger">Salida</span>
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-arrow-up-circle"></i> Salida
+                                </span>
+                                <br>
+
+                                <small class="text-muted">Stock reducido</small>
                             }
                         </td>
                         <td>@item.Cantidad</td>
@@ -100,11 +123,23 @@
                                     <span class="badge bg-info">
                                         <i class="bi bi-hourglass-split"></i> En Proceso
                                     </span>
+                                    @if (item.TipoMovimiento == "Entrada")
+                                    {
+                                        <br>
+                        
+                                        <small class="text-muted">Completar para generar salida</small>
+                                    }
                                     break;
                                 case "Completado":
                                     <span class="badge bg-success">
                                         <i class="bi bi-check-circle"></i> Completado
                                     </span>
+                                    @if (item.FechaCompletado.HasValue)
+                                    {
+                                        <br>
+                        
+                                        <small class="text-muted">@item.FechaCompletado.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                    }
                                     break;
                             }
                         </td>
@@ -115,10 +150,12 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
 
-                                @if (item.TipoMovimiento == "Salida" && item.EstadoServicio != "Completado")
+                                @if (item.EstadoServicio != "Completado")
                                 {
                                     <button type="button" class="btn btn-sm btn-success btn-completar"
-                                            data-id="@item.IdMovimiento" title="Marcar como Completado">
+                                            data-id="@item.IdMovimiento"
+                                            data-tipo="@item.TipoMovimiento"
+                                            title="Marcar como Completado">
                                         <i class="bi bi-check-circle"></i>
                                     </button>
                                 }
@@ -134,6 +171,13 @@
             </tbody>
         </table>
     </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-3" role="alert">
+            <i class="bi bi-inbox"></i> No hay movimientos registrados en el sistema.
+        </div>
+    }
 </div>
 
 @section Scripts {
@@ -141,15 +185,26 @@
         $(document).ready(function() {
             $('.btn-completar').click(function() {
                 var idMovimiento = $(this).data('id');
+                var tipoMovimiento = $(this).data('tipo');
                 var btn = $(this);
 
-                if (confirm('¿Está seguro de marcar este servicio como completado?')) {
+                var mensaje = '¿Está seguro de marcar este servicio como completado?';
+
+                if (tipoMovimiento === 'Entrada') {
+                    mensaje = '¿Está seguro de completar esta Entrada?\n\n' +
+                             'Esto generará automáticamente una SALIDA y REDUCIRÁ el stock del inventario.';
+                }
+
+                if (confirm(mensaje)) {
+                    // Mostrar indicador de carga
+                    btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i>');
+
                     $.ajax({
                         url: '@Url.Action("CompletarServicio", "MovimientosServicios")',
                         type: 'POST',
-                        data: { id: idMovimiento },
-                        headers: {
-                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        data: {
+                            id: idMovimiento,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         },
                         success: function(response) {
                             if (response.success) {
@@ -157,10 +212,12 @@
                                 location.reload();
                             } else {
                                 alert('Error: ' + response.message);
+                                btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i>');
                             }
                         },
-                        error: function() {
-                            alert('Error al comunicarse con el servidor');
+                        error: function(xhr) {
+                            alert('Error al comunicarse con el servidor: ' + xhr.statusText);
+                            btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i>');
                         }
                     });
                 }
