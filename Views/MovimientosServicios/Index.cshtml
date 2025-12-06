@@ -39,12 +39,11 @@
                     <th>ID</th>
                     <th>Fecha</th>
                     <th>Servicio</th>
-                    <th>Mascota</th>
-                    <th>Cliente</th>
+                    <th>Mascota/Cliente</th>
                     <th>Cuidador</th>
                     <th>Tipo</th>
                     <th>Cantidad</th>
-                    <th>Observaciones</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -55,8 +54,10 @@
                         <td>@item.IdMovimiento</td>
                         <td>@item.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</td>
                         <td>@item.Servicio?.NombreServicio</td>
-                        <td>@item.Mascota?.Nombre</td>
-                        <td>@item.Mascota?.Cliente?.Nombre @item.Mascota?.Cliente?.Apellido</td>
+                        <td>
+                            <strong>@item.Mascota?.Nombre</strong><br>
+                            <small class="text-muted">@item.Mascota?.Cliente?.Nombre @item.Mascota?.Cliente?.Apellido</small>
+                        </td>
                         <td>
                             @if (item.Cuidador != null)
                             {
@@ -64,9 +65,16 @@
                                     <i class="bi bi-person-badge"></i> @item.Cuidador.Nombre @item.Cuidador.Apellido
                                 </span>
                             }
+                            else if (item.TipoMovimiento == "Salida")
+                            {
+                                <a asp-action="AsignarCuidador" asp-route-id="@item.IdMovimiento"
+                                   class="btn btn-sm btn-outline-warning" title="Asignar Cuidador">
+                                    <i class="bi bi-person-plus"></i> Asignar
+                                </a>
+                            }
                             else
                             {
-                                <span class="text-muted">Sin asignar</span>
+                                <span class="text-muted">-</span>
                             }
                         </td>
                         <td>
@@ -80,14 +88,46 @@
                             }
                         </td>
                         <td>@item.Cantidad</td>
-                        <td>@(string.IsNullOrEmpty(item.Observaciones) ? "-" : item.Observaciones)</td>
                         <td>
-                            <a asp-action="Detalles" asp-route-id="@item.IdMovimiento" class="btn btn-sm btn-info" title="Ver Detalles">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a asp-action="Eliminar" asp-route-id="@item.IdMovimiento" class="btn btn-sm btn-danger" title="Eliminar">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            @switch (item.EstadoServicio)
+                            {
+                                case "Pendiente":
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-clock"></i> Pendiente
+                                    </span>
+                                    break;
+                                case "En Proceso":
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-hourglass-split"></i> En Proceso
+                                    </span>
+                                    break;
+                                case "Completado":
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Completado
+                                    </span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a asp-action="Detalles" asp-route-id="@item.IdMovimiento"
+                                   class="btn btn-sm btn-info" title="Ver Detalles">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                @if (item.TipoMovimiento == "Salida" && item.EstadoServicio != "Completado")
+                                {
+                                    <button type="button" class="btn btn-sm btn-success btn-completar"
+                                            data-id="@item.IdMovimiento" title="Marcar como Completado">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                }
+
+                                <a asp-action="Eliminar" asp-route-id="@item.IdMovimiento"
+                                   class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -95,3 +135,36 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.btn-completar').click(function() {
+                var idMovimiento = $(this).data('id');
+                var btn = $(this);
+
+                if (confirm('¿Está seguro de marcar este servicio como completado?')) {
+                    $.ajax({
+                        url: '@Url.Action("CompletarServicio", "MovimientosServicios")',
+                        type: 'POST',
+                        data: { id: idMovimiento },
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Error al comunicarse con el servidor');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

@@ -150,6 +150,8 @@ namespace Guarderia.Controllers
                 tabla.AddHeaderCell("Mascota");
                 tabla.AddHeaderCell("Total");
 
+                decimal totalGeneral = 0;
+
                 foreach (var venta in ventas)
                 {
                     tabla.AddCell(venta.IdVenta.ToString());
@@ -157,13 +159,32 @@ namespace Guarderia.Controllers
                     tabla.AddCell($"{venta.Cliente?.Nombre} {venta.Cliente?.Apellido}");
                     tabla.AddCell(venta.Mascota?.Nombre ?? "");
                     tabla.AddCell($"${venta.Total:N2}");
+                    totalGeneral += venta.Total;
                 }
 
+                // Fila de total
+                tabla.AddCell("");
+                tabla.AddCell("");
+                tabla.AddCell("");
+                tabla.AddCell(new Cell().Add(new Paragraph("TOTAL GENERAL:").SetBold()).SetTextAlignment(TextAlignment.RIGHT));
+                tabla.AddCell(new Cell().Add(new Paragraph($"${totalGeneral:N2}").SetBold()));
+
                 documento.Add(tabla);
+
+                documento.Add(new Paragraph($"Total de Ventas: {ventas.Count}")
+                    .SetTextAlignment(TextAlignment.LEFT)
+                    .SetFontSize(12)
+                    .SetMarginTop(10));
+
+                documento.Add(new Paragraph($"Monto Total: ${totalGeneral:N2}")
+                    .SetTextAlignment(TextAlignment.LEFT)
+                    .SetFontSize(12)
+                    .SetBold());
+
                 documento.Add(new Paragraph("Reporte generado el " +
-                    DateTime.Now.ToString("dd/MM/yyyy"))
+                    DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
                     .SetTextAlignment(TextAlignment.RIGHT)
-                    .SetFontSize(12));
+                    .SetFontSize(10));
 
                 documento.Close();
                 byte[] pdfBytes = flujo.ToArray();

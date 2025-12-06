@@ -1,0 +1,117 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Guarderia.Models.MovimientoServicio
+@{
+    ViewData["Title"] = "Asignar Cuidador";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5><i class="bi bi-info-circle"></i> Información del Servicio</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Servicio:</dt>
+                <dd class="col-sm-9">@Model.Servicio?.NombreServicio</dd>
+
+                <dt class="col-sm-3">Mascota:</dt>
+                <dd class="col-sm-9">@Model.Mascota?.Nombre (@Model.Mascota?.Raza)</dd>
+
+                <dt class="col-sm-3">Cliente:</dt>
+                <dd class="col-sm-9">@Model.Mascota?.Cliente?.Nombre @Model.Mascota?.Cliente?.Apellido</dd>
+
+                <dt class="col-sm-3">Tipo de Movimiento:</dt>
+                <dd class="col-sm-9">
+                    @if (Model.TipoMovimiento == "Entrada")
+                    {
+                        <span class="badge bg-success">Entrada</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Salida</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Cantidad:</dt>
+                <dd class="col-sm-9">@Model.Cantidad</dd>
+
+                <dt class="col-sm-3">Estado Actual:</dt>
+                <dd class="col-sm-9">
+                    @switch (Model.EstadoServicio)
+                    {
+                        case "Pendiente":
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            break;
+                        case "En Proceso":
+                            <span class="badge bg-info">En Proceso</span>
+                            break;
+                        case "Completado":
+                            <span class="badge bg-success">Completado</span>
+                            break;
+                    }
+                </dd>
+
+                @if (Model.Cuidador != null)
+                {
+                    <dt class="col-sm-3">Cuidador Actual:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-primary">
+                            <i class="bi bi-person-badge"></i> @Model.Cuidador.Nombre @Model.Cuidador.Apellido
+                        </span>
+                    </dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="bi bi-person-plus"></i> Asignar o Cambiar Cuidador</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="AsignarCuidador" method="post">
+                <input type="hidden" name="IdMovimiento" value="@Model.IdMovimiento" />
+
+                <div class="mb-3">
+                    <label class="form-label">Seleccione un Cuidador *</label>
+                    <select name="IdCuidador" class="form-select" required>
+                        <option value="">-- Seleccione un cuidador --</option>
+                        @foreach (var item in (SelectList)ViewBag.Cuidadores)
+                        {
+                            <option value="@item.Value" selected="@(Model.IdCuidador?.ToString() == item.Value)">
+                                @item.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Información:</strong> Al asignar un cuidador, el estado del servicio cambiará a "En Proceso" si está en estado "Pendiente".
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-person-check"></i> Asignar Cuidador
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -56,8 +56,7 @@ namespace Guarderia.Controllers
                     return View(movimiento);
                 }
 
-                // SOLO MODIFICAR STOCK SI ES UN MOVIMIENTO MANUAL (NO VIENE DE VENTA)
-                // Validar stock disponible para salidas
+                // SOLO MODIFICAR STOCK SI ES SALIDA (cuando el servicio se usa realmente)
                 if (movimiento.TipoMovimiento == "Salida")
                 {
                     if (servicio.StockDisponible < movimiento.Cantidad)
@@ -69,10 +68,14 @@ namespace Guarderia.Controllers
                         return View(movimiento);
                     }
                     servicio.StockDisponible -= movimiento.Cantidad;
+                    movimiento.EstadoServicio = "Pendiente";
                 }
                 else if (movimiento.TipoMovimiento == "Entrada")
                 {
+                    // Solo aumentar stock en casos de entrada (devoluciones, compras)
                     servicio.StockDisponible += movimiento.Cantidad;
+                    movimiento.EstadoServicio = "Completado";
+                    movimiento.FechaCompletado = DateTime.Now;
                 }
 
                 movimiento.FechaMovimiento = DateTime.Now;
@@ -88,6 +91,93 @@ namespace Guarderia.Controllers
             ViewBag.Clientes = new SelectList(_context.Clientes, "IdCliente", "Nombre");
             ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
             return View(movimiento);
+        }
+
+        // POST: Completar Servicio
+        [HttpPost]
+        public async Task<IActionResult> CompletarServicio(int id)
+        {
+            var movimiento = await _context.MovimientosServicios.FindAsync(id);
+
+            if (movimiento == null)
+            {
+                return Json(new { success = false, message = "Movimiento no encontrado" });
+            }
+
+            if (movimiento.TipoMovimiento != "Salida")
+            {
+                return Json(new { success = false, message = "Solo se pueden completar servicios de tipo Salida" });
+            }
+
+            if (movimiento.EstadoServicio == "Completado")
+            {
+                return Json(new { success = false, message = "El servicio ya está completado" });
+            }
+
+            movimiento.EstadoServicio = "Completado";
+            movimiento.FechaCompletado = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Servicio completado exitosamente" });
+        }
+
+        // GET: AsignarCuidador
+        public async Task<IActionResult> AsignarCuidador(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var movimiento = await _context.MovimientosServicios
+                .Include(m => m.Servicio)
+                .Include(m => m.Mascota)
+                    .ThenInclude(ma => ma.Cliente)
+                .Include(m => m.Cuidador)
+                .FirstOrDefaultAsync(m => m.IdMovimiento == id);
+
+            if (movimiento == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Cuidadores = new SelectList(_context.Cuidadores.Where(c => c.Activo), "IdCuidador", "Nombre");
+            return View(movimiento);
+        }
+
+        // POST: AsignarCuidador
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AsignarCuidador(int IdMovimiento, int IdCuidador)
+        {
+            var movimiento = await _context.MovimientosServicios.FindAsync(IdMovimiento);
+
+            if (movimiento == null)
+            {
+                TempData["Error"] = "Movimiento no encontrado";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var cuidador = await _context.Cuidadores.FindAsync(IdCuidador);
+
+            if (cuidador == null || !cuidador.Activo)
+            {
+                TempData["Error"] = "Cuidador no válido o inactivo";
+                return RedirectToAction(nameof(AsignarCuidador), new { id = IdMovimiento });
+            }
+
+            movimiento.IdCuidador = IdCuidador;
+
+            if (movimiento.EstadoServicio == "Pendiente")
+            {
+                movimiento.EstadoServicio = "En Proceso";
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = $"Cuidador {cuidador.Nombre} {cuidador.Apellido} asignado exitosamente";
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: MovimientosServicios/Detalles/5

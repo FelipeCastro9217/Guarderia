@@ -37,6 +37,13 @@ namespace Guarderia.Models
         [Display(Name = "Observaciones")]
         public string? Observaciones { get; set; }
 
+        [StringLength(20)]
+        [Display(Name = "Estado del Servicio")]
+        public string EstadoServicio { get; set; } = "Pendiente"; // Pendiente, En Proceso, Completado
+
+        [Display(Name = "Fecha de Completado")]
+        public DateTime? FechaCompletado { get; set; }
+
         [ForeignKey("IdServicio")]
         public virtual InventarioServicio? Servicio { get; set; }
 
