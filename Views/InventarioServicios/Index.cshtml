@@ -1,0 +1,88 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!-- Views/InventarioServicios/Index.cshtml -->
+@model IEnumerable<Guarderia.Models.InventarioServicio>
+@{
+    ViewData["Title"] = "Inventario de Servicios";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <p>
+        <a asp-action="Crear" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Servicio
+        </a>
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Servicio</th>
+                    <th>Categoría</th>
+                    <th>Precio Unitario</th>
+                    <th>Stock Disponible</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.IdServicio</td>
+                        <td>@item.NombreServicio</td>
+                        <td><span class="badge bg-info">@item.Categoria</span></td>
+                        <td>$@item.PrecioUnitario.ToString("N2")</td>
+                        <td>@item.StockDisponible</td>
+                        <td>
+                            @if (item.StockDisponible > 10)
+                            {
+                                <span class="badge bg-success">Disponible</span>
+                            }
+                            else if (item.StockDisponible > 0)
+                            {
+                                <span class="badge bg-warning">Poco Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Agotado</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Detalles" asp-route-id="@item.IdServicio" class="btn btn-sm btn-info" title="Ver Detalles">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Editar" asp-route-id="@item.IdServicio" class="btn btn-sm btn-warning" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a asp-action="Eliminar" asp-route-id="@item.IdServicio" class="btn btn-sm btn-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

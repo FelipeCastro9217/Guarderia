@@ -1,0 +1,235 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!-- Views/VentasServicios/Crear.cshtml -->
+@{
+    ViewData["Title"] = "Registrar Venta de Servicios";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <form asp-action="Crear" method="post" id="formVenta">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Información del Cliente y Mascota</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Cliente</label>
+                            <select name="IdCliente" id="clienteSelect" class="form-select" required asp-items="ViewBag.Clientes">
+                                <option value="">-- Seleccione un cliente --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mascota</label>
+                            <select name="IdMascota" id="mascotaSelect" class="form-select" required>
+                                <option value="">-- Primero seleccione un cliente --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h5>Agregar Servicios</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Servicio</label>
+                            <select id="servicioSelect" class="form-select">
+                                <option value="">-- Seleccione un servicio --</option>
+                                @foreach (var servicio in ViewBag.Servicios)
+                                {
+                                    <option value="@servicio.IdServicio"
+                                            data-precio="@servicio.PrecioUnitario"
+                                            data-stock="@servicio.StockDisponible">
+                                        @servicio.NombreServicio - $@servicio.PrecioUnitario.ToString("N2") (Stock: @servicio.StockDisponible)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" id="cantidadInput" class="form-control" min="1" value="1" />
+                        </div>
+
+                        <button type="button" id="btnAgregarServicio" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Agregar Servicio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h5>Servicios Seleccionados</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="tablaServicios">
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detallesServicios">
+                            <tr id="sinServicios">
+                                <td colspan="5" class="text-center text-muted">No hay servicios agregados</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                <td><strong id="totalVenta">$0.00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="ServiciosJson" id="serviciosJson" />
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-lg" id="btnGuardar" disabled>
+                <i class="bi bi-save"></i> Guardar Venta
+            </button>
+            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let servicios = [];
+            let total = 0;
+
+            // Cargar mascotas al seleccionar cliente
+            $('#clienteSelect').change(function() {
+                var idCliente = $(this).val();
+                if (idCliente) {
+                    $.get('@Url.Action("ObtenerMascotasPorCliente", "Mascotas")', { idCliente: idCliente }, function(data) {
+                        var mascotaSelect = $('#mascotaSelect');
+                        mascotaSelect.empty();
+                        mascotaSelect.append('<option value="">-- Seleccione una mascota --</option>');
+                        $.each(data, function(i, mascota) {
+                            mascotaSelect.append('<option value="' + mascota.idMascota + '">' + mascota.nombre + '</option>');
+                        });
+                    });
+                } else {
+                    $('#mascotaSelect').empty().append('<option value="">-- Primero seleccione un cliente --</option>');
+                }
+            });
+
+            // Agregar servicio a la tabla
+            $('#btnAgregarServicio').click(function() {
+                var servicioSelect = $('#servicioSelect');
+                var idServicio = servicioSelect.val();
+                var nombreServicio = servicioSelect.find('option:selected').text().split(' - ')[0];
+                var precio = parseFloat(servicioSelect.find('option:selected').data('precio'));
+                var stock = parseInt(servicioSelect.find('option:selected').data('stock'));
+                var cantidad = parseInt($('#cantidadInput').val());
+
+                if (!idServicio) {
+                    alert('Seleccione un servicio');
+                    return;
+                }
+
+                if (cantidad <= 0) {
+                    alert('La cantidad debe ser mayor a 0');
+                    return;
+                }
+
+                if (cantidad > stock) {
+                    alert('Stock insuficiente. Disponible: ' + stock);
+                    return;
+                }
+
+                // Verificar si ya existe el servicio
+                var existe = servicios.find(s => s.IdServicio == idServicio);
+                if (existe) {
+                    alert('El servicio ya fue agregado. Elimínelo si desea cambiar la cantidad.');
+                    return;
+                }
+
+                var subtotal = cantidad * precio;
+                total += subtotal;
+
+                servicios.push({
+                    IdServicio: parseInt(idServicio),
+                    Cantidad: cantidad
+                });
+
+                // Remover mensaje "sin servicios"
+                $('#sinServicios').remove();
+
+                // Agregar fila a la tabla
+                var fila = '<tr data-id="' + idServicio + '">' +
+                    '<td>' + nombreServicio + '</td>' +
+                    '<td>' + cantidad + '</td>' +
+                    '<td>$' + precio.toFixed(2) + '</td>' +
+                    '<td>$' + subtotal.toFixed(2) + '</td>' +
+                    '<td><button type="button" class="btn btn-sm btn-danger btnEliminar" data-id="' + idServicio + '" data-subtotal="' + subtotal + '"><i class="bi bi-trash"></i></button></td>' +
+                    '</tr>';
+                $('#detallesServicios').append(fila);
+
+                // Actualizar total
+                $('#totalVenta').text('$' + total.toFixed(2));
+
+                // Actualizar campo hidden
+                $('#serviciosJson').val(JSON.stringify(servicios));
+
+                // Habilitar botón guardar
+                $('#btnGuardar').prop('disabled', false);
+
+                // Limpiar selección
+                servicioSelect.val('');
+                $('#cantidadInput').val(1);
+            });
+
+            // Eliminar servicio de la tabla
+            $(document).on('click', '.btnEliminar', function() {
+                var idServicio = $(this).data('id');
+                var subtotal = parseFloat($(this).data('subtotal'));
+
+                // Eliminar del array
+                servicios = servicios.filter(s => s.IdServicio != idServicio);
+
+                // Actualizar total
+                total -= subtotal;
+                $('#totalVenta').text('$' + total.toFixed(2));
+
+                // Eliminar fila
+                $(this).closest('tr').remove();
+
+                // Actualizar campo hidden
+                $('#serviciosJson').val(JSON.stringify(servicios));
+
+                // Si no hay servicios, mostrar mensaje y deshabilitar botón
+                if (servicios.length === 0) {
+                    $('#detallesServicios').append('<tr id="sinServicios"><td colspan="5" class="text-center text-muted">No hay servicios agregados</td></tr>');
+                    $('#btnGuardar').prop('disabled', true);
+                }
+            });
+        });
+    </script>
+}

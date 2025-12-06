@@ -1,0 +1,51 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!-- Views/Mascotas/Eliminar.cshtml -->
+@model Guarderia.Models.Mascota
+@{
+    ViewData["Title"] = "Eliminar Mascota";
+}
+
+<div class="container mt-4">
+    <h2 class="text-danger">@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">¿Está seguro que desea eliminar esta mascota?</h4>
+        <p>Esta acción no se puede deshacer.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nombre:</dt>
+                <dd class="col-sm-9">@Model.Nombre</dd>
+
+                <dt class="col-sm-3">Raza:</dt>
+                <dd class="col-sm-9">@Model.Raza</dd>
+
+                <dt class="col-sm-3">Edad:</dt>
+                <dd class="col-sm-9">@Model.Edad años</dd>
+
+                <dt class="col-sm-3">Peso:</dt>
+                <dd class="col-sm-9">@Model.Peso.ToString("N2") kg</dd>
+
+                <dt class="col-sm-3">Propietario:</dt>
+                <dd class="col-sm-9">@Model.Cliente?.Nombre @Model.Cliente?.Apellido</dd>
+            </dl>
+        </div>
+    </div>
+
+    <form asp-action="Eliminar" method="post" class="mt-3">
+        <input type="hidden" asp-for="IdMascota" />
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Confirmar Eliminación
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+    </form>
+</div>

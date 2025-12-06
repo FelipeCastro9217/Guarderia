@@ -1,0 +1,51 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!-- Views/Mascotas/Detalles.cshtml -->
+@model Guarderia.Models.Mascota
+@{
+    ViewData["Title"] = "Detalles de la Mascota";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID Mascota:</dt>
+                <dd class="col-sm-9">@Model.IdMascota</dd>
+
+                <dt class="col-sm-3">Nombre:</dt>
+                <dd class="col-sm-9">@Model.Nombre</dd>
+
+                <dt class="col-sm-3">Raza:</dt>
+                <dd class="col-sm-9">@Model.Raza</dd>
+
+                <dt class="col-sm-3">Edad:</dt>
+                <dd class="col-sm-9">@Model.Edad años</dd>
+
+                <dt class="col-sm-3">Peso:</dt>
+                <dd class="col-sm-9">@Model.Peso.ToString("N2") kg</dd>
+
+                <dt class="col-sm-3">Propietario:</dt>
+                <dd class="col-sm-9">@Model.Cliente?.Nombre @Model.Cliente?.Apellido</dd>
+
+                <dt class="col-sm-3">Historial Médico:</dt>
+                <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.HistorialMedico) ? "Sin historial registrado" : Model.HistorialMedico)</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Editar" asp-route-id="@Model.IdMascota" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>

@@ -1,0 +1,105 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!-- Views/MovimientosServicios/Crear.cshtml -->
+@model Guarderia.Models.MovimientoServicio
+@{
+    ViewData["Title"] = "Registrar Movimiento";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Crear" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="IdServicio" class="form-label">Servicio</label>
+                    <select asp-for="IdServicio" class="form-select" asp-items="ViewBag.Servicios">
+                        <option value="">-- Seleccione un servicio --</option>
+                    </select>
+                    <span asp-validation-for="IdServicio" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Cliente</label>
+                    <select id="clienteSelect" class="form-select" asp-items="ViewBag.Clientes">
+                        <option value="">-- Seleccione un cliente --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="IdMascota" class="form-label">Mascota</label>
+                    <select asp-for="IdMascota" id="mascotaSelect" class="form-select">
+                        <option value="">-- Primero seleccione un cliente --</option>
+                    </select>
+                    <span asp-validation-for="IdMascota" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TipoMovimiento" class="form-label"></label>
+                        <select asp-for="TipoMovimiento" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Entrada">Entrada</option>
+                            <option value="Salida">Salida</option>
+                        </select>
+                        <span asp-validation-for="TipoMovimiento" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Cantidad" class="form-label"></label>
+                        <input asp-for="Cantidad" class="form-control" type="number" min="1" />
+                        <span asp-validation-for="Cantidad" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Observaciones" class="form-label"></label>
+                    <textarea asp-for="Observaciones" class="form-control" rows="3"
+                              placeholder="Notas adicionales sobre el movimiento"></textarea>
+                    <span asp-validation-for="Observaciones" class="text-danger"></span>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function() {
+            $('#clienteSelect').change(function() {
+                var idCliente = $(this).val();
+                if (idCliente) {
+                    $.get('@Url.Action("ObtenerMascotasPorCliente", "Mascotas")', { idCliente: idCliente }, function(data) {
+                        var mascotaSelect = $('#mascotaSelect');
+                        mascotaSelect.empty();
+                        mascotaSelect.append('<option value="">-- Seleccione una mascota --</option>');
+                        $.each(data, function(i, mascota) {
+                            mascotaSelect.append('<option value="' + mascota.idMascota + '">' + mascota.nombre + '</option>');
+                        });
+                    });
+                } else {
+                    $('#mascotaSelect').empty().append('<option value="">-- Primero seleccione un cliente --</option>');
+                }
+            });
+        });
+    </script>
+}

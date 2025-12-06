@@ -1,0 +1,60 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<!-- Views/MovimientosServicios/Detalles.cshtml -->
+@model Guarderia.Models.MovimientoServicio
+@{
+    ViewData["Title"] = "Detalles del Movimiento";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <hr />
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID Movimiento:</dt>
+                <dd class="col-sm-9">@Model.IdMovimiento</dd>
+
+                <dt class="col-sm-3">Fecha y Hora:</dt>
+                <dd class="col-sm-9">@Model.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                <dt class="col-sm-3">Servicio:</dt>
+                <dd class="col-sm-9">@Model.Servicio?.NombreServicio</dd>
+
+                <dt class="col-sm-3">Mascota:</dt>
+                <dd class="col-sm-9">@Model.Mascota?.Nombre (@Model.Mascota?.Raza)</dd>
+
+                <dt class="col-sm-3">Cliente:</dt>
+                <dd class="col-sm-9">@Model.Mascota?.Cliente?.Nombre @Model.Mascota?.Cliente?.Apellido</dd>
+
+                <dt class="col-sm-3">Tipo de Movimiento:</dt>
+                <dd class="col-sm-9">
+                    @if (Model.TipoMovimiento == "Entrada")
+                    {
+                        <span class="badge bg-success">Entrada</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Salida</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Cantidad:</dt>
+                <dd class="col-sm-9">@Model.Cantidad</dd>
+
+                <dt class="col-sm-3">Observaciones:</dt>
+                <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Observaciones) ? "Sin observaciones" : Model.Observaciones)</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>

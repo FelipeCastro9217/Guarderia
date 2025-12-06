@@ -1,0 +1,334 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@{
+    ViewData["Title"] = "Crear Factura";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-receipt"></i> @ViewData["Title"]</h2>
+    <hr />
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Crear" method="post" id="formFactura">
+        <div class="row">
+            <!-- Sección Cliente y Mascota -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="bi bi-person"></i> Información del Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Cliente *</label>
+                            <select name="IdCliente" id="clienteSelect" class="form-select" required asp-items="ViewBag.Clientes">
+                                <option value="">-- Seleccione un cliente --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mascota *</label>
+                            <select name="IdMascota" id="mascotaSelect" class="form-select" required>
+                                <option value="">-- Primero seleccione un cliente --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descuento Global ($)</label>
+                            <input type="number" name="DescuentoGlobal" id="descuentoGlobal" class="form-control"
+                                   min="0" step="0.01" value="0" />
+                            <small class="text-muted">Descuento aplicado al total de la factura</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea name="Observaciones" class="form-control" rows="3"
+                                      placeholder="Notas adicionales sobre la factura"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Agregar Servicios -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="bi bi-box"></i> Agregar Servicios</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Servicio</label>
+                            <select id="servicioSelect" class="form-select">
+                                <option value="">-- Seleccione un servicio --</option>
+                                @foreach (var servicio in ViewBag.Servicios)
+                                {
+                                    <option value="@servicio.IdServicio"
+                                            data-nombre="@servicio.NombreServicio"
+                                            data-precio="@servicio.PrecioUnitario"
+                                            data-stock="@servicio.StockDisponible">
+                                        @servicio.NombreServicio - $@servicio.PrecioUnitario.ToString("N0") (Stock: @servicio.StockDisponible)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cantidad</label>
+                                <input type="number" id="cantidadInput" class="form-control" min="1" value="1" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Descuento Item ($)</label>
+                                <input type="number" id="descuentoItemInput" class="form-control"
+                                       min="0" step="0.01" value="0" />
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <strong>Precio:</strong> <span id="precioUnitarioLabel">$0</span><br>
+                            <strong>Subtotal:</strong> <span id="subtotalLabel">$0</span>
+                        </div>
+
+                        <button type="button" id="btnAgregarServicio" class="btn btn-success w-100">
+                            <i class="bi bi-plus-circle"></i> Agregar Servicio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Servicios Agregados -->
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h5><i class="bi bi-list-check"></i> Servicios en la Factura</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Servicio</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unit.</th>
+                                <th>Desc. Item</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detallesServicios">
+                            <tr id="sinServicios">
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="bi bi-inbox"></i> No hay servicios agregados
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen de Totales -->
+        <div class="card mb-3 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="bi bi-calculator"></i> Resumen de Factura</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end"><span id="subtotalTotal">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-end"><strong>Descuentos Items:</strong></td>
+                                <td class="text-end text-danger"><span id="descuentosItems">-$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-end"><strong>Descuento Global:</strong></td>
+                                <td class="text-end text-danger"><span id="descuentoGlobalLabel">-$0.00</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-end"><strong>IVA (19%):</strong></td>
+                                <td class="text-end"><span id="ivaTotal">$0.00</span></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="text-end"><h4><strong>TOTAL A PAGAR:</strong></h4></td>
+                                <td class="text-end"><h4><strong><span id="totalFinal">$0.00</span></strong></h4></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="ServiciosJson" id="serviciosJson" />
+
+        <!-- Botones de Acción -->
+        <div class="mt-4 mb-5">
+            <button type="submit" class="btn btn-primary btn-lg" id="btnGuardar" disabled>
+                <i class="bi bi-save"></i> Generar Factura
+            </button>
+            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let servicios = [];
+            let subtotalGeneral = 0;
+            let descuentosItemsTotal = 0;
+
+            // Cargar mascotas al seleccionar cliente
+            $('#clienteSelect').change(function() {
+                var idCliente = $(this).val();
+                if (idCliente) {
+                    $.get('@Url.Action("ObtenerMascotasPorCliente", "Mascotas")', { idCliente: idCliente }, function(data) {
+                        var mascotaSelect = $('#mascotaSelect');
+                        mascotaSelect.empty();
+                        mascotaSelect.append('<option value="">-- Seleccione una mascota --</option>');
+                        $.each(data, function(i, mascota) {
+                            mascotaSelect.append('<option value="' + mascota.idMascota + '">' + mascota.nombre + '</option>');
+                        });
+                    });
+                } else {
+                    $('#mascotaSelect').empty().append('<option value="">-- Primero seleccione un cliente --</option>');
+                }
+            });
+
+            // Actualizar precio y subtotal al cambiar servicio o cantidad
+            function actualizarPreview() {
+                var servicioSelect = $('#servicioSelect');
+                var precio = parseFloat(servicioSelect.find('option:selected').data('precio')) || 0;
+                var cantidad = parseInt($('#cantidadInput').val()) || 0;
+                var descuentoItem = parseFloat($('#descuentoItemInput').val()) || 0;
+                var subtotal = (cantidad * precio) - descuentoItem;
+
+                $('#precioUnitarioLabel').text('$' + precio.toFixed(2));
+                $('#subtotalLabel').text('$' + Math.max(0, subtotal).toFixed(2));
+            }
+
+            $('#servicioSelect, #cantidadInput, #descuentoItemInput').change(actualizarPreview);
+
+            // Agregar servicio a la tabla
+            $('#btnAgregarServicio').click(function() {
+                var servicioSelect = $('#servicioSelect');
+                var idServicio = servicioSelect.val();
+                var nombreServicio = servicioSelect.find('option:selected').data('nombre');
+                var precio = parseFloat(servicioSelect.find('option:selected').data('precio'));
+                var stock = parseInt(servicioSelect.find('option:selected').data('stock'));
+                var cantidad = parseInt($('#cantidadInput').val());
+                var descuentoItem = parseFloat($('#descuentoItemInput').val()) || 0;
+
+                // Validaciones
+                if (!idServicio) {
+                    alert('Seleccione un servicio');
+                    return;
+                }
+                if (cantidad <= 0) {
+                    alert('La cantidad debe ser mayor a 0');
+                    return;
+                }
+                if (cantidad > stock) {
+                    alert('Stock insuficiente. Disponible: ' + stock);
+                    return;
+                }
+                if (servicios.find(s => s.IdServicio == idServicio)) {
+                    alert('El servicio ya fue agregado');
+                    return;
+                }
+
+                var subtotalItem = cantidad * precio;
+                var subtotalConDescuento = subtotalItem - descuentoItem;
+
+                subtotalGeneral += subtotalConDescuento;
+                descuentosItemsTotal += descuentoItem;
+
+                servicios.push({
+                    IdServicio: parseInt(idServicio),
+                    NombreServicio: nombreServicio,
+                    Cantidad: cantidad,
+                    PrecioUnitario: precio,
+                    DescuentoItem: descuentoItem
+                });
+
+                // Agregar fila
+                $('#sinServicios').remove();
+                var fila = '<tr data-id="' + idServicio + '">' +
+                    '<td>' + nombreServicio + '</td>' +
+                    '<td>' + cantidad + '</td>' +
+                    '<td>$' + precio.toFixed(2) + '</td>' +
+                    '<td>$' + descuentoItem.toFixed(2) + '</td>' +
+                    '<td>$' + subtotalConDescuento.toFixed(2) + '</td>' +
+                    '<td><button type="button" class="btn btn-sm btn-danger btnEliminar" data-id="' + idServicio +
+                    '" data-subtotal="' + subtotalConDescuento + '" data-descuento="' + descuentoItem +
+                    '"><i class="bi bi-trash"></i></button></td>' +
+                    '</tr>';
+                $('#detallesServicios').append(fila);
+
+                actualizarTotales();
+                $('#serviciosJson').val(JSON.stringify(servicios));
+                $('#btnGuardar').prop('disabled', false);
+
+                // Limpiar
+                servicioSelect.val('');
+                $('#cantidadInput').val(1);
+                $('#descuentoItemInput').val(0);
+                actualizarPreview();
+            });
+
+            // Eliminar servicio
+            $(document).on('click', '.btnEliminar', function() {
+                var idServicio = $(this).data('id');
+                var subtotal = parseFloat($(this).data('subtotal'));
+                var descuento = parseFloat($(this).data('descuento'));
+
+                servicios = servicios.filter(s => s.IdServicio != idServicio);
+                subtotalGeneral -= subtotal;
+                descuentosItemsTotal -= descuento;
+
+                $(this).closest('tr').remove();
+                actualizarTotales();
+                $('#serviciosJson').val(JSON.stringify(servicios));
+
+                if (servicios.length === 0) {
+                    $('#detallesServicios').append('<tr id="sinServicios"><td colspan="6" class="text-center text-muted"><i class="bi bi-inbox"></i> No hay servicios agregados</td></tr>');
+                    $('#btnGuardar').prop('disabled', true);
+                }
+            });
+
+            // Actualizar totales al cambiar descuento global
+            $('#descuentoGlobal').on('input', actualizarTotales);
+
+            function actualizarTotales() {
+                var descuentoGlobal = parseFloat($('#descuentoGlobal').val()) || 0;
+                var iva = subtotalGeneral * 0.19;
+                var total = subtotalGeneral + iva - descuentoGlobal;
+
+                $('#subtotalTotal').text('$' + subtotalGeneral.toFixed(2));
+                $('#descuentosItems').text('-$' + descuentosItemsTotal.toFixed(2));
+                $('#descuentoGlobalLabel').text('-$' + descuentoGlobal.toFixed(2));
+                $('#ivaTotal').text('$' + iva.toFixed(2));
+                $('#totalFinal').text('$' + Math.max(0, total).toFixed(2));
+            }
+        });
+    </script>
+}
