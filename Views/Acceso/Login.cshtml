@@ -59,11 +59,13 @@
             border: none;
             padding: 12px;
             font-weight: bold;
+            color: white;
         }
 
             .btn-login:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                color: white;
             }
 
         .credentials-info {
@@ -73,15 +75,61 @@
             margin-top: 20px;
             border-radius: 5px;
         }
+
+        .nav-tabs .nav-link {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+            .nav-tabs .nav-link.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+            }
+
+            .nav-tabs .nav-link:hover:not(.active) {
+                background-color: rgba(102, 126, 234, 0.1);
+            }
+
+        .tab-icon {
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
+
+        .register-info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+            .register-info-box h6 {
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
+        .btn-registro-completo {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            border: none;
+        }
+
+            .btn-registro-completo:hover {
+                background: #f0f0f0;
+                color: #667eea;
+            }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div class="login-card">
                     <div class="login-header">
-                        <i class="bi bi-house-heart"></i>
+                        
                         <h2>Guardería El Amigo</h2>
                         <p class="mb-0">Sistema de Gestión</p>
                     </div>
@@ -100,6 +148,22 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         }
+
+                        <!-- Información de Registro Completo -->
+                        <div class="register-info-box">
+                            <h6>¿Eres cliente nuevo?</h6>
+                            <p class="mb-2 small">Registra tu cuenta Y tu mascota en un solo paso</p>
+                            <a asp-action="Registro" class="btn btn-registro-completo">
+                               Registro Cliente 
+                            </a>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Formulario de Login -->
+                        <h5 class="text-center mb-3">
+                            <i class="bi bi-box-arrow-in-right"></i> Acceso Administrativo
+                        </h5>
 
                         <form asp-controller="Acceso" asp-action="Login" method="post">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -122,7 +186,7 @@
                                 <span asp-validation-for="Clave" class="text-danger"></span>
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-login w-100 btn-lg">
+                            <button type="submit" class="btn btn-login w-100 btn-lg">
                                 <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
                             </button>
                         </form>

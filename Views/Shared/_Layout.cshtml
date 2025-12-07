@@ -22,6 +22,17 @@
             font-weight: bold;
             color: #ffc107;
         }
+
+        .btn-register-link {
+            background: linear-gradient(135deg, #43e97b 0%, #38ef7d 100%);
+            border: none;
+            font-weight: bold;
+        }
+
+            .btn-register-link:hover {
+                background: linear-gradient(135deg, #38ef7d 0%, #43e97b 100%);
+                transform: translateY(-1px);
+            }
     </style>
 </head>
 <body>
@@ -167,6 +178,22 @@
                             <li class="nav-item">
                                 <a class="nav-link btn btn-outline-light" asp-controller="Acceso" asp-action="Salir">
                                     <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <!-- Menú para usuarios NO autenticados -->
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item me-2">
+                                <a class="nav-link btn btn-outline-light" asp-controller="Acceso" asp-action="Login">
+                                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-register-link text-white" asp-controller="Acceso" asp-action="Registro">
+                                    <i class="bi bi-person-plus"></i> Registrarse
                                 </a>
                             </li>
                         </ul>

@@ -1,0 +1,257 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Guarderia.Models.Cliente
+@{
+    ViewData["Title"] = "Registro de Cliente";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Guardería El Amigo</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        .register-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+            .register-header i {
+                font-size: 3rem;
+                margin-bottom: 10px;
+            }
+
+        .register-body {
+            padding: 40px;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+            .btn-register:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                color: white;
+            }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .pet-icon {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-9">
+                <div class="register-card">
+                    <div class="register-header">
+                        
+                        <h2>Registro Completo</h2>
+                        <p class="mb-0">Cliente - Guardería El Amigo</p>
+                    </div>
+                    <div class="register-body">
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        }
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Complete el formulario para registrar su cuenta</strong><br>
+                            <small>Ambos registros se crearán simultáneamente para agilizar su proceso.</small>
+                        </div>
+
+                        <form asp-action="RegistroCompleto" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <!-- Sección Datos del Cliente -->
+                            <div class="section-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-person-fill"></i> Datos del Cliente (Propietario)
+                                </h5>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-person"></i> Nombre *
+                                    </label>
+                                    <input name="Cliente.Nombre" class="form-control"
+                                           placeholder="Juan" required />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-person"></i> Apellido *
+                                    </label>
+                                    <input name="Cliente.Apellido" class="form-control"
+                                           placeholder="Pérez" required />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-envelope"></i> Correo Electrónico *
+                                    </label>
+                                    <input name="Cliente.Email" type="email" class="form-control"
+                                           placeholder="ejemplo@correo.com" required />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-telephone"></i> Teléfono *
+                                    </label>
+                                    <input name="Cliente.Telefono" class="form-control"
+                                           placeholder="3001234567" required />
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="bi bi-geo-alt"></i> Dirección *
+                                </label>
+                                <input name="Cliente.Direccion" class="form-control"
+                                       placeholder="Calle 123 # 45-67" required />
+                            </div>
+
+                            <!-- Sección Datos de la Mascota -->
+                            <div class="section-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-heart-fill pet-icon"></i> Datos de la Mascota
+                                </h5>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-tag"></i> Nombre de la Mascota *
+                                    </label>
+                                    <input name="Mascota.Nombre" class="form-control"
+                                           placeholder="Max" required />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-award"></i> Raza *
+                                    </label>
+                                    <input name="Mascota.Raza" class="form-control"
+                                           placeholder="Labrador Retriever" required />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar"></i> Edad (años) *
+                                    </label>
+                                    <input name="Mascota.Edad" type="number" class="form-control"
+                                           placeholder="3" min="0" max="25" required />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-speedometer"></i> Peso (kg) *
+                                    </label>
+                                    <input name="Mascota.Peso" type="number" step="0.01" class="form-control"
+                                           placeholder="25.5" min="0" required />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-gender-ambiguous"></i> Sexo *
+                                    </label>
+                                    <select name="Mascota.Sexo" class="form-select" required>
+                                        <option value="">Seleccione</option>
+                                        <option value="Macho">Macho</option>
+                                        <option value="Hembra">Hembra</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-clipboard-heart"></i> Historial Médico / Observaciones
+                                </label>
+                                <textarea name="Mascota.HistorialMedico" class="form-control" rows="3"
+                                          placeholder="Vacunas al día, alergias, condiciones especiales, etc. (Opcional)"></textarea>
+                                <small class="text-muted">
+                                    Información importante sobre la salud de su mascota
+                                </small>
+                            </div>
+
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Importante:</strong> Verifique que todos los datos sean correctos antes de enviar.
+                                Una vez registrado, el administrador revisará y activará su cuenta.
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-register w-100 btn-lg">
+                                    <i class="bi bi-check-circle"></i> Registrar Cliente
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <a asp-action="Login" style="color: #667eea; text-decoration: none; font-weight: bold;">
+                                <i class="bi bi-arrow-left"></i> Volver al inicio de sesión
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
