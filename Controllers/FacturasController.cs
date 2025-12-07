@@ -85,14 +85,7 @@ namespace Guarderia.Controllers
                         return View();
                     }
 
-                    if (servicioDb.StockDisponible < servicio.Cantidad)
-                    {
-                        TempData["Error"] = $"Stock insuficiente para {servicioDb.NombreServicio}. Disponible: {servicioDb.StockDisponible}";
-                        ViewBag.Clientes = new SelectList(_context.Clientes, "IdCliente", "Nombre");
-                        ViewBag.Servicios = _context.InventarioServicios.ToList();
-                        return View();
-                    }
-
+                    // NO validamos stock porque la factura es el pago de un servicio ya completado
                     var subtotalItem = servicio.Cantidad * servicioDb.PrecioUnitario;
                     var descuentoItem = servicio.DescuentoItem;
                     var subtotalConDescuento = subtotalItem - descuentoItem;
@@ -108,9 +101,6 @@ namespace Guarderia.Controllers
                         DescuentoItem = descuentoItem,
                         Subtotal = subtotalConDescuento
                     });
-
-                    // NO MODIFICAR STOCK AQUÍ
-                    // El stock debe modificarse SOLO en MovimientosServicios
                 }
 
                 // Calcular IVA y total
@@ -142,7 +132,58 @@ namespace Guarderia.Controllers
                 _context.Facturas.Add(factura);
                 await _context.SaveChangesAsync();
 
-                TempData["Mensaje"] = $"Factura {numeroFactura} generada exitosamente. Recuerde registrar el movimiento de servicios correspondiente.";
+                // NUEVO: Generar automáticamente movimiento de SALIDA para cada servicio
+                foreach (var detalle in detalles)
+                {
+                    var servicioDb = await _context.InventarioServicios.FindAsync(detalle.IdServicio);
+
+                    if (servicioDb != null)
+                    {
+                        // Buscar el movimiento de ENTRADA asociado (más reciente para esta mascota y servicio)
+                        var movimientoEntrada = await _context.MovimientosServicios
+                            .Where(m => m.IdServicio == detalle.IdServicio
+                                     && m.IdMascota == IdMascota
+                                     && m.TipoMovimiento == "Entrada"
+                                     && m.EstadoServicio == "En Proceso")
+                            .OrderByDescending(m => m.FechaMovimiento)
+                            .FirstOrDefaultAsync();
+
+                        int? idCuidadorAsignado = null;
+
+                        // Si existe una ENTRADA en proceso, completarla y obtener su cuidador
+                        if (movimientoEntrada != null)
+                        {
+                            movimientoEntrada.EstadoServicio = "Completado";
+                            movimientoEntrada.FechaCompletado = DateTime.Now;
+                            idCuidadorAsignado = movimientoEntrada.IdCuidador;
+                            _context.Update(movimientoEntrada);
+                        }
+
+                        // Crear movimiento de SALIDA (aumenta el stock) con el mismo cuidador
+                        var movimientoSalida = new MovimientoServicio
+                        {
+                            IdServicio = detalle.IdServicio,
+                            IdMascota = IdMascota,
+                            IdCuidador = idCuidadorAsignado, // Mantener el cuidador de la Entrada
+                            TipoMovimiento = "Salida",
+                            Cantidad = detalle.Cantidad,
+                            FechaMovimiento = DateTime.Now,
+                            EstadoServicio = "Completado",
+                            FechaCompletado = DateTime.Now,
+                            Observaciones = $"Salida automática por Factura {numeroFactura} - Servicio pagado y completado"
+                        };
+
+                        // AUMENTAR el stock (el servicio terminó y vuelve a estar disponible)
+                        servicioDb.StockDisponible += detalle.Cantidad;
+
+                        _context.MovimientosServicios.Add(movimientoSalida);
+                        _context.Update(servicioDb);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["Mensaje"] = $"Factura {numeroFactura} generada exitosamente. Se completaron las Entradas pendientes, se generaron los movimientos de Salida automáticos y se actualizó el stock.";
                 return RedirectToAction(nameof(Detalles), new { id = factura.IdFactura });
             }
             catch (Exception ex)
@@ -215,13 +256,27 @@ namespace Guarderia.Controllers
 
             if (factura != null && factura.Estado != "Anulada")
             {
-                // NO REVERTIR STOCK AQUÍ
-                // Si se anula una factura y se necesita revertir, debe hacerse manualmente
-                // creando un Movimiento de tipo "Entrada" en MovimientosServicios
+                // Buscar los movimientos de Salida generados por esta factura
+                var movimientosSalida = await _context.MovimientosServicios
+                    .Where(m => m.Observaciones.Contains($"Factura {factura.NumeroFactura}"))
+                    .Include(m => m.Servicio)
+                    .ToListAsync();
+
+                // Revertir los movimientos de Salida (restar stock)
+                foreach (var movimiento in movimientosSalida)
+                {
+                    if (movimiento.Servicio != null)
+                    {
+                        movimiento.Servicio.StockDisponible -= movimiento.Cantidad;
+                        _context.Update(movimiento.Servicio);
+                    }
+                    _context.MovimientosServicios.Remove(movimiento);
+                }
 
                 factura.Estado = "Anulada";
                 await _context.SaveChangesAsync();
-                TempData["Mensaje"] = $"Factura {factura.NumeroFactura} anulada exitosamente. Si necesita revertir el stock, registre un movimiento de entrada.";
+
+                TempData["Mensaje"] = $"Factura {factura.NumeroFactura} anulada exitosamente. Se revirtieron los movimientos de Salida y el stock fue actualizado.";
             }
 
             return RedirectToAction(nameof(Index));
