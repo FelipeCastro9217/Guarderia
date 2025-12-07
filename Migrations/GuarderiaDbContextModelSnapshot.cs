@@ -22,6 +22,69 @@ namespace Guarderia.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Guarderia.Models.Agendamiento", b =>
+                {
+                    b.Property<int>("IdAgendamiento")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdAgendamiento"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("FechaConfirmacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaSolicitada")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaSolicitud")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HoraSolicitada")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("IdCliente")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdMascota")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdServicio")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IdUsuarioConfirmacion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NotasAdmin")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("IdAgendamiento");
+
+                    b.HasIndex("IdCliente");
+
+                    b.HasIndex("IdMascota");
+
+                    b.HasIndex("IdServicio");
+
+                    b.HasIndex("IdUsuarioConfirmacion");
+
+                    b.ToTable("Agendamientos");
+                });
+
             modelBuilder.Entity("Guarderia.Models.Cliente", b =>
                 {
                     b.Property<int>("IdCliente")
@@ -34,6 +97,13 @@ namespace Guarderia.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Clave")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("CuentaActiva")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Direccion")
                         .IsRequired()
@@ -113,7 +183,7 @@ namespace Guarderia.Migrations
                             Apellido = "Rodríguez",
                             Email = "carlos.rodriguez@guarderia.com",
                             Especialidad = "Perros grandes",
-                            FechaContratacion = new DateTime(2024, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9653),
+                            FechaContratacion = new DateTime(2024, 12, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6521),
                             Nombre = "Carlos",
                             Telefono = "3001234567"
                         },
@@ -124,7 +194,7 @@ namespace Guarderia.Migrations
                             Apellido = "López",
                             Email = "maria.lopez@guarderia.com",
                             Especialidad = "Perros pequeños",
-                            FechaContratacion = new DateTime(2025, 6, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9692),
+                            FechaContratacion = new DateTime(2025, 6, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6556),
                             Nombre = "María",
                             Telefono = "3009876543"
                         });
@@ -450,6 +520,12 @@ namespace Guarderia.Migrations
                             IdRol = 2,
                             Descripcion = "Acceso limitado",
                             NombreRol = "Empleado"
+                        },
+                        new
+                        {
+                            IdRol = 3,
+                            Descripcion = "Acceso al panel de cliente",
+                            NombreRol = "Cliente"
                         });
                 });
 
@@ -494,7 +570,7 @@ namespace Guarderia.Migrations
                             IdUsuario = 1,
                             Clave = "admin",
                             Correo = "admin@guarderia.com",
-                            FechaRegistro = new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9556),
+                            FechaRegistro = new DateTime(2025, 12, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6417),
                             IdRol = 1,
                             Nombres = "Admin Sistema"
                         },
@@ -503,7 +579,7 @@ namespace Guarderia.Migrations
                             IdUsuario = 2,
                             Clave = "123",
                             Correo = "empleado@guarderia.com",
-                            FechaRegistro = new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9583),
+                            FechaRegistro = new DateTime(2025, 12, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6439),
                             IdRol = 2,
                             Nombres = "Empleado Uno"
                         });
@@ -541,6 +617,39 @@ namespace Guarderia.Migrations
                     b.HasIndex("IdMascota");
 
                     b.ToTable("VentasServicios");
+                });
+
+            modelBuilder.Entity("Guarderia.Models.Agendamiento", b =>
+                {
+                    b.HasOne("Guarderia.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Guarderia.Models.Mascota", "Mascota")
+                        .WithMany()
+                        .HasForeignKey("IdMascota")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Guarderia.Models.InventarioServicio", "Servicio")
+                        .WithMany()
+                        .HasForeignKey("IdServicio")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Guarderia.Models.Usuario", "UsuarioConfirmacion")
+                        .WithMany()
+                        .HasForeignKey("IdUsuarioConfirmacion");
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("Mascota");
+
+                    b.Navigation("Servicio");
+
+                    b.Navigation("UsuarioConfirmacion");
                 });
 
             modelBuilder.Entity("Guarderia.Models.DetalleFactura", b =>
@@ -603,7 +712,7 @@ namespace Guarderia.Migrations
             modelBuilder.Entity("Guarderia.Models.Mascota", b =>
                 {
                     b.HasOne("Guarderia.Models.Cliente", "Cliente")
-                        .WithMany()
+                        .WithMany("Mascotas")
                         .HasForeignKey("IdCliente")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -665,6 +774,11 @@ namespace Guarderia.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("Mascota");
+                });
+
+            modelBuilder.Entity("Guarderia.Models.Cliente", b =>
+                {
+                    b.Navigation("Mascotas");
                 });
 
             modelBuilder.Entity("Guarderia.Models.Factura", b =>

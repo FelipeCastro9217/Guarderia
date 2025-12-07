@@ -27,7 +27,7 @@ namespace Guarderia.Controllers
             return View();
         }
 
-        // POST: Acceso/Login
+        // POST: Acceso/Login (Administradores y Empleados)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(Usuario _usuario)
@@ -42,14 +42,15 @@ namespace Guarderia.Controllers
                 {
                     new Claim(ClaimTypes.Name, usuario.Nombres),
                     new Claim(ClaimTypes.Email, usuario.Correo),
-                    new Claim(ClaimTypes.Role, usuario.IdRol.ToString())
+                    new Claim(ClaimTypes.Role, usuario.IdRol.ToString()),
+                    new Claim("TipoUsuario", "Empleado")
                 };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = true,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 };
 
                 await HttpContext.SignInAsync(
@@ -67,6 +68,49 @@ namespace Guarderia.Controllers
             }
         }
 
+        // POST: Acceso/LoginCliente
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginCliente(string Email, string Clave)
+        {
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.Email == Email && c.Clave == Clave);
+
+            if (cliente != null && cliente.CuentaActiva)
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, cliente.IdCliente.ToString()),
+                    new Claim(ClaimTypes.Name, $"{cliente.Nombre} {cliente.Apellido}"),
+                    new Claim(ClaimTypes.Email, cliente.Email),
+                    new Claim(ClaimTypes.Role, "Cliente"),
+                    new Claim("TipoUsuario", "Cliente")
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
+                TempData["Mensaje"] = $"Bienvenido, {cliente.Nombre}";
+                return RedirectToAction("Dashboard", "PanelCliente");
+            }
+            else
+            {
+                TempData["Error"] = cliente == null ?
+                    "Correo o contraseña incorrectos" :
+                    "Tu cuenta no está activa. Contacta con la guardería.";
+                return RedirectToAction("Login");
+            }
+        }
+
         // GET: Acceso/Registro
         public IActionResult Registro()
         {
@@ -80,7 +124,15 @@ namespace Guarderia.Controllers
         {
             try
             {
-                // Crear objeto Cliente desde el formulario
+                // Validar contraseña
+                var clave = Request.Form["Cliente.Clave"].ToString();
+                if (string.IsNullOrEmpty(clave) || clave.Length < 6)
+                {
+                    TempData["Error"] = "La contraseña debe tener al menos 6 caracteres";
+                    return View("Registro");
+                }
+
+                // Crear objeto Cliente
                 var cliente = new Cliente
                 {
                     Nombre = Request.Form["Cliente.Nombre"],
@@ -88,6 +140,8 @@ namespace Guarderia.Controllers
                     Email = Request.Form["Cliente.Email"],
                     Telefono = Request.Form["Cliente.Telefono"],
                     Direccion = Request.Form["Cliente.Direccion"],
+                    Clave = clave,
+                    CuentaActiva = true,
                     FechaRegistro = DateTime.Now
                 };
 
@@ -111,11 +165,11 @@ namespace Guarderia.Controllers
                     return View("Registro");
                 }
 
-                // Guardar el cliente primero
+                // Guardar el cliente
                 _context.Clientes.Add(cliente);
                 await _context.SaveChangesAsync();
 
-                // Ahora crear la mascota asociada al cliente recién creado
+                // Crear la mascota
                 var mascota = new Mascota
                 {
                     Nombre = Request.Form["Mascota.Nombre"],
@@ -123,13 +177,13 @@ namespace Guarderia.Controllers
                     Edad = int.Parse(Request.Form["Mascota.Edad"]),
                     Peso = decimal.Parse(Request.Form["Mascota.Peso"]),
                     HistorialMedico = Request.Form["Mascota.HistorialMedico"],
-                    IdCliente = cliente.IdCliente // Usar el ID del cliente recién creado
+                    IdCliente = cliente.IdCliente
                 };
 
                 _context.Mascotas.Add(mascota);
                 await _context.SaveChangesAsync();
 
-                TempData["Mensaje"] = $"¡Registro exitoso! Cliente '{cliente.Nombre}' y mascota '{mascota.Nombre}' registrados correctamente. Por favor contacte con la guardería para agendar servicios.";
+                TempData["Mensaje"] = $"¡Registro exitoso! Ya puedes iniciar sesión con tu correo: {cliente.Email}";
                 return RedirectToAction(nameof(Login));
             }
             catch (Exception ex)
@@ -137,55 +191,6 @@ namespace Guarderia.Controllers
                 TempData["Error"] = $"Error al registrar: {ex.Message}";
                 return View("Registro");
             }
-        }
-
-        // POST: Acceso/Registro (Registro simple desde pestaña del login)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Registro(Cliente cliente)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    // Verificar si el correo ya existe
-                    var clienteExistente = await _context.Clientes
-                        .FirstOrDefaultAsync(c => c.Email == cliente.Email);
-
-                    if (clienteExistente != null)
-                    {
-                        TempData["Error"] = "El correo electrónico ya está registrado";
-                        return View(cliente);
-                    }
-
-                    // Verificar si el teléfono ya existe
-                    var telefonoExistente = await _context.Clientes
-                        .FirstOrDefaultAsync(c => c.Telefono == cliente.Telefono);
-
-                    if (telefonoExistente != null)
-                    {
-                        TempData["Error"] = "El número de teléfono ya está registrado";
-                        return View(cliente);
-                    }
-
-                    // Establecer la fecha de registro
-                    cliente.FechaRegistro = DateTime.Now;
-
-                    // Guardar el cliente
-                    _context.Clientes.Add(cliente);
-                    await _context.SaveChangesAsync();
-
-                    TempData["Mensaje"] = "Registro exitoso. Por favor contacte con la guardería para registrar su mascota y activar servicios.";
-                    return RedirectToAction(nameof(Login));
-                }
-                catch (Exception ex)
-                {
-                    TempData["Error"] = $"Error al registrar: {ex.Message}";
-                    return View(cliente);
-                }
-            }
-
-            return View(cliente);
         }
 
         // GET: Acceso/Salir

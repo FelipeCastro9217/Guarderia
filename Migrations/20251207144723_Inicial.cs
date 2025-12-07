@@ -24,6 +24,8 @@ namespace Guarderia.Migrations
                     Telefono = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Direccion = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Clave = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CuentaActiva = table.Column<bool>(type: "bit", nullable: false),
                     FechaRegistro = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -231,6 +233,53 @@ namespace Guarderia.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Agendamientos",
+                columns: table => new
+                {
+                    IdAgendamiento = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IdCliente = table.Column<int>(type: "int", nullable: false),
+                    IdMascota = table.Column<int>(type: "int", nullable: false),
+                    IdServicio = table.Column<int>(type: "int", nullable: false),
+                    FechaSolicitada = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    HoraSolicitada = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Cantidad = table.Column<int>(type: "int", nullable: false),
+                    Observaciones = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FechaSolicitud = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IdUsuarioConfirmacion = table.Column<int>(type: "int", nullable: true),
+                    FechaConfirmacion = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    NotasAdmin = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Agendamientos", x => x.IdAgendamiento);
+                    table.ForeignKey(
+                        name: "FK_Agendamientos_Clientes_IdCliente",
+                        column: x => x.IdCliente,
+                        principalTable: "Clientes",
+                        principalColumn: "IdCliente",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Agendamientos_InventarioServicios_IdServicio",
+                        column: x => x.IdServicio,
+                        principalTable: "InventarioServicios",
+                        principalColumn: "IdServicio",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Agendamientos_Mascotas_IdMascota",
+                        column: x => x.IdMascota,
+                        principalTable: "Mascotas",
+                        principalColumn: "IdMascota",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Agendamientos_Usuarios_IdUsuarioConfirmacion",
+                        column: x => x.IdUsuarioConfirmacion,
+                        principalTable: "Usuarios",
+                        principalColumn: "IdUsuario");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DetallesFacturas",
                 columns: table => new
                 {
@@ -294,8 +343,8 @@ namespace Guarderia.Migrations
                 columns: new[] { "IdCuidador", "Activo", "Apellido", "Email", "Especialidad", "FechaContratacion", "Nombre", "Telefono" },
                 values: new object[,]
                 {
-                    { 1, true, "Rodríguez", "carlos.rodriguez@guarderia.com", "Perros grandes", new DateTime(2024, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9653), "Carlos", "3001234567" },
-                    { 2, true, "López", "maria.lopez@guarderia.com", "Perros pequeños", new DateTime(2025, 6, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9692), "María", "3009876543" }
+                    { 1, true, "Rodríguez", "carlos.rodriguez@guarderia.com", "Perros grandes", new DateTime(2024, 12, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6521), "Carlos", "3001234567" },
+                    { 2, true, "López", "maria.lopez@guarderia.com", "Perros pequeños", new DateTime(2025, 6, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6556), "María", "3009876543" }
                 });
 
             migrationBuilder.InsertData(
@@ -316,7 +365,8 @@ namespace Guarderia.Migrations
                 values: new object[,]
                 {
                     { 1, "Acceso total al sistema", "Administrador" },
-                    { 2, "Acceso limitado", "Empleado" }
+                    { 2, "Acceso limitado", "Empleado" },
+                    { 3, "Acceso al panel de cliente", "Cliente" }
                 });
 
             migrationBuilder.InsertData(
@@ -324,9 +374,29 @@ namespace Guarderia.Migrations
                 columns: new[] { "IdUsuario", "Clave", "Correo", "FechaRegistro", "IdRol", "Nombres" },
                 values: new object[,]
                 {
-                    { 1, "admin", "admin@guarderia.com", new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9556), 1, "Admin Sistema" },
-                    { 2, "123", "empleado@guarderia.com", new DateTime(2025, 12, 6, 18, 51, 31, 761, DateTimeKind.Local).AddTicks(9583), 2, "Empleado Uno" }
+                    { 1, "admin", "admin@guarderia.com", new DateTime(2025, 12, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6417), 1, "Admin Sistema" },
+                    { 2, "123", "empleado@guarderia.com", new DateTime(2025, 12, 7, 9, 47, 22, 20, DateTimeKind.Local).AddTicks(6439), 2, "Empleado Uno" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamientos_IdCliente",
+                table: "Agendamientos",
+                column: "IdCliente");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamientos_IdMascota",
+                table: "Agendamientos",
+                column: "IdMascota");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamientos_IdServicio",
+                table: "Agendamientos",
+                column: "IdServicio");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agendamientos_IdUsuarioConfirmacion",
+                table: "Agendamientos",
+                column: "IdUsuarioConfirmacion");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DetallesFacturas_IdFactura",
@@ -397,6 +467,9 @@ namespace Guarderia.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Agendamientos");
+
             migrationBuilder.DropTable(
                 name: "DetallesFacturas");
 

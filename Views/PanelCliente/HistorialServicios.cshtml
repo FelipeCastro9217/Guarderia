@@ -1,0 +1,132 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model IEnumerable<Guarderia.Models.MovimientoServicio>
+@{
+    ViewData["Title"] = "Historial de Servicios";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-clock-history"></i> @ViewData["Title"]</h2>
+    <hr />
+
+    <p>
+        <a asp-action="Dashboard" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Dashboard
+        </a>
+    </p>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Mascota</th>
+                        <th>Servicio</th>
+                        <th>Cuidador</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var movimiento in Model)
+                    {
+                        <tr>
+                            <td>@movimiento.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><strong>@movimiento.Mascota?.Nombre</strong></td>
+                            <td>
+                                @movimiento.Servicio?.NombreServicio
+                                <br>
+                                <small class="text-muted">@movimiento.Servicio?.Descripcion</small>
+                            </td>
+                            <td>
+                                @if (movimiento.Cuidador != null)
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-person-badge"></i>
+                                        @movimiento.Cuidador.Nombre @movimiento.Cuidador.Apellido
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (movimiento.TipoMovimiento == "Entrada")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-arrow-down-circle"></i> Entrada
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-arrow-up-circle"></i> Salida
+                                    </span>
+                                }
+                            </td>
+                            <td>@movimiento.Cantidad</td>
+                            <td>
+                                @switch (movimiento.EstadoServicio)
+                                {
+                                    case "Pendiente":
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-clock"></i> Pendiente
+                                        </span>
+                                        break;
+                                    case "En Proceso":
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-hourglass-split"></i> En Proceso
+                                        </span>
+                                        break;
+                                    case "Completado":
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Completado
+                                        </span>
+                                        @if (movimiento.FechaCompletado.HasValue)
+                                        {
+                                            <br>
+                                            <small class="text-muted">
+                                                @movimiento.FechaCompletado.Value.ToString("dd/MM/yyyy")
+                                            </small>
+                                        }
+                                        break;
+                                }
+                            </td>
+                        </tr>
+                        @if (!string.IsNullOrEmpty(movimiento.Observaciones))
+                        {
+                            <tr class="table-light">
+                                <td colspan="7">
+                                    <small><strong>Observaciones:</strong> @movimiento.Observaciones</small>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-info mt-3" role="alert">
+            <i class="bi bi-info-circle"></i>
+            <strong>Total de servicios registrados:</strong> @Model.Count()
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">No tienes servicios en tu historial</h4>
+            <p>Agenda tu primer servicio para empezar</p>
+            <a asp-action="AgendarServicio" class="btn btn-success btn-lg mt-2">
+                <i class="bi bi-calendar-plus"></i> Agendar Servicio
+            </a>
+        </div>
+    }
+</div>

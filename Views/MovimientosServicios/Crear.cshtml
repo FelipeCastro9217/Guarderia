@@ -12,22 +12,6 @@
     <h2>@ViewData["Title"]</h2>
     <hr />
 
-    <!-- Alertas informativas -->
-    <div class="alert alert-info" role="alert">
-        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Importante sobre el Stock</h5>
-        <hr>
-        <p class="mb-2"><strong>Movimiento de ENTRADA:</strong></p>
-        <ul class="mb-2">
-            <li>NO modifica el stock del inventario al crearse</li>
-            <li>El estado será automáticamente "En Proceso"</li>
-            <li>Al marcar como "Completado", se generará automáticamente una SALIDA que SÍ reducirá el stock</li>
-        </ul>
-        <p class="mb-2"><strong>Movimiento de SALIDA:</strong></p>
-        <ul class="mb-0">
-            <li>REDUCE el stock del inventario inmediatamente</li>
-            <li>El estado será "Pendiente" hasta que se complete</li>
-        </ul>
-    </div>
 
     <div class="row">
         <div class="col-md-10">

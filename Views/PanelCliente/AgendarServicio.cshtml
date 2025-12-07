@@ -1,0 +1,175 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Guarderia.Models.Agendamiento
+@{
+    ViewData["Title"] = "Agendar Servicio";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-calendar-plus"></i> @ViewData["Title"]</h2>
+    <hr />
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle"></i>
+        <strong>Información:</strong> Agenda un servicio para tu mascota. El personal de la guardería
+        confirmará la disponibilidad y se pondrá en contacto contigo.
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="AgendarServicio" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="bi bi-heart"></i> Selecciona tu Mascota</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="IdMascota" class="form-label">Mascota *</label>
+                            <select asp-for="IdMascota" class="form-select" asp-items="ViewBag.Mascotas" required>
+                                <option value="">-- Selecciona una mascota --</option>
+                            </select>
+                            <span asp-validation-for="IdMascota" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="bi bi-box-seam"></i> Selecciona el Servicio</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var servicio in ViewBag.Servicios)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-success">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio"
+                                                       name="IdServicio" id="servicio_@servicio.IdServicio"
+                                                       value="@servicio.IdServicio" required>
+                                                <label class="form-check-label" for="servicio_@servicio.IdServicio">
+                                                    <strong>@servicio.NombreServicio</strong><br>
+                                                    <small class="text-muted">@servicio.Descripcion</small><br>
+                                                    <span class="badge bg-success">$@servicio.PrecioUnitario.ToString("N0")</span>
+                                                    <span class="badge bg-info">Stock: @servicio.StockDisponible</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <span asp-validation-for="IdServicio" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h5><i class="bi bi-calendar-event"></i> Fecha y Hora</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FechaSolicitada" class="form-label">Fecha Deseada *</label>
+                                <input asp-for="FechaSolicitada" type="date" class="form-control"
+                                       min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="FechaSolicitada" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="HoraSolicitada" class="form-label">Hora Deseada *</label>
+                                <select asp-for="HoraSolicitada" class="form-select" required>
+                                    <option value="">-- Selecciona --</option>
+                                    <option value="08:00">08:00 AM</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                </select>
+                                <span asp-validation-for="HoraSolicitada" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Cantidad" class="form-label">Cantidad *</label>
+                            <input asp-for="Cantidad" type="number" class="form-control"
+                                   min="1" value="1" required />
+                            <small class="text-muted">Número de servicios/días</small>
+                            <span asp-validation-for="Cantidad" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Observaciones" class="form-label">Observaciones</label>
+                            <textarea asp-for="Observaciones" class="form-control" rows="3"
+                                      placeholder="Información adicional o solicitudes especiales"></textarea>
+                            <span asp-validation-for="Observaciones" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-calendar-check"></i> Agendar Servicio
+                    </button>
+                    <a asp-action="Dashboard" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-info-circle"></i> Información Importante</h5>
+                </div>
+                <div class="card-body">
+                    <h6><strong>Proceso de Agendamiento:</strong></h6>
+                    <ol>
+                        <li>Completa el formulario</li>
+                        <li>Envía tu solicitud</li>
+                        <li>Espera la confirmación del personal</li>
+                        <li>Recibe notificación por correo o teléfono</li>
+                    </ol>
+
+                    <hr>
+
+                    <h6><strong>Horarios de Atención:</strong></h6>
+                    <p class="mb-1">Lunes a Viernes: 8:00 AM - 6:00 PM</p>
+                    <p class="mb-1">Sábados: 9:00 AM - 2:00 PM</p>
+                    <p class="mb-3">Domingos: Cerrado</p>
+
+                    <hr>
+
+                    <h6><strong>Contacto:</strong></h6>
+                    <p class="mb-1"><i class="bi bi-telephone"></i> (601) 234-5678</p>
+                    <p class="mb-0"><i class="bi bi-envelope"></i> info@guarderiaelami.go.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

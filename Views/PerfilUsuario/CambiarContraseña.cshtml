@@ -1,0 +1,194 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@{
+    ViewData["Title"] = "Cambiar Contraseña";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0"><i class="bi bi-key"></i> @ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="CambiarClave" method="post" id="formCambiarClave">
+                        @Html.AntiForgeryToken()
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Requisitos de seguridad:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>La contraseña debe tener al menos 6 caracteres</li>
+                                <li>Asegúrate de recordar tu nueva contraseña</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="claveActual" class="form-label">
+                                <i class="bi bi-lock"></i> Contraseña Actual *
+                            </label>
+                            <input type="password" class="form-control form-control-lg"
+                                   id="claveActual" name="claveActual" required
+                                   placeholder="Ingresa tu contraseña actual" />
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="mb-3">
+                            <label for="claveNueva" class="form-label">
+                                <i class="bi bi-key-fill"></i> Nueva Contraseña *
+                            </label>
+                            <input type="password" class="form-control form-control-lg"
+                                   id="claveNueva" name="claveNueva" required
+                                   minlength="6"
+                                   placeholder="Mínimo 6 caracteres" />
+                            <div class="form-text">
+                                <span id="strengthIndicator"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirmarClave" class="form-label">
+                                <i class="bi bi-key-fill"></i> Confirmar Nueva Contraseña *
+                            </label>
+                            <input type="password" class="form-control form-control-lg"
+                                   id="confirmarClave" name="confirmarClave" required
+                                   minlength="6"
+                                   placeholder="Repite la nueva contraseña" />
+                            <div class="form-text">
+                                <span id="matchIndicator"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg" id="btnSubmit">
+                                <i class="bi bi-check-circle"></i> Cambiar Contraseña
+                            </button>
+                            <a asp-action="MiPerfil" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-info mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-shield-check"></i> Consejos de Seguridad</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>No uses contraseñas fáciles de adivinar</li>
+                        <li>No compartas tu contraseña con nadie</li>
+                        <li>Cambia tu contraseña periódicamente</li>
+                        <li>No uses la misma contraseña en múltiples sitios</li>
+                        <li>Considera usar una combinación de letras, números y símbolos</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const claveNueva = $('#claveNueva');
+            const confirmarClave = $('#confirmarClave');
+            const strengthIndicator = $('#strengthIndicator');
+            const matchIndicator = $('#matchIndicator');
+            const btnSubmit = $('#btnSubmit');
+
+            // Verificar fortaleza de contraseña
+            claveNueva.on('input', function() {
+                const password = $(this).val();
+                let strength = 0;
+
+                if (password.length >= 6) strength++;
+                if (password.length >= 8) strength++;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+                if (/\d/.test(password)) strength++;
+                if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+                let text = '';
+                let className = '';
+
+                if (password.length === 0) {
+                    text = '';
+                } else if (strength < 2) {
+                    text = '<i class="bi bi-exclamation-triangle text-danger"></i> Débil';
+                    className = 'text-danger';
+                } else if (strength < 4) {
+                    text = '<i class="bi bi-exclamation-circle text-warning"></i> Media';
+                    className = 'text-warning';
+                } else {
+                    text = '<i class="bi bi-check-circle text-success"></i> Fuerte';
+                    className = 'text-success';
+                }
+
+                strengthIndicator.html(text).attr('class', className);
+                verificarCoincidencia();
+            });
+
+            // Verificar coincidencia
+            confirmarClave.on('input', verificarCoincidencia);
+
+            function verificarCoincidencia() {
+                const nueva = claveNueva.val();
+                const confirma = confirmarClave.val();
+
+                if (confirma.length === 0) {
+                    matchIndicator.html('');
+                    return;
+                }
+
+                if (nueva === confirma) {
+                    matchIndicator.html('<i class="bi bi-check-circle text-success"></i> Las contraseñas coinciden')
+                        .attr('class', 'text-success');
+                } else {
+                    matchIndicator.html('<i class="bi bi-x-circle text-danger"></i> Las contraseñas no coinciden')
+                        .attr('class', 'text-danger');
+                }
+            }
+
+            // Validar antes de enviar
+            $('#formCambiarClave').on('submit', function(e) {
+                const nueva = claveNueva.val();
+                const confirma = confirmarClave.val();
+
+                if (nueva !== confirma) {
+                    e.preventDefault();
+                    alert('Las contraseñas no coinciden. Por favor verifica.');
+                    return false;
+                }
+
+                if (nueva.length < 6) {
+                    e.preventDefault();
+                    alert('La contraseña debe tener al menos 6 caracteres.');
+                    return false;
+                }
+
+                return true;
+            });
+        });
+    </script>
+}

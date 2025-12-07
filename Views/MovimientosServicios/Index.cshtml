@@ -26,16 +26,6 @@
         </div>
     }
 
-    <!-- Información del sistema -->
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Gestión de Stock</h6>
-        <small>
-            <strong>Entrada:</strong> NO modifica stock al crearse. Al completar, genera Salida automática.<br>
-            <strong>Salida:</strong> REDUCE stock al crearse. Solo se puede revertir eliminando el movimiento.
-        </small>
-    </div>
-
     <p>
         <a asp-action="Crear" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nuevo Movimiento
@@ -98,7 +88,6 @@
                                 </span>
                                 <br>
 
-                                <small class="text-muted">Sin efecto en stock</small>
                             }
                             else
                             {
@@ -106,8 +95,7 @@
                                     <i class="bi bi-arrow-up-circle"></i> Salida
                                 </span>
                                 <br>
-
-                                <small class="text-muted">Stock reducido</small>
+ 
                             }
                         </td>
                         <td>@item.Cantidad</td>
@@ -147,7 +135,7 @@
                             <div class="btn-group" role="group">
                                 <a asp-action="Detalles" asp-route-id="@item.IdMovimiento"
                                    class="btn btn-sm btn-info" title="Ver Detalles">
-                                    <i class="bi bi-eye"></i>
+                                    Detalles
                                 </a>
 
                                 @if (item.EstadoServicio != "Completado")
@@ -156,13 +144,13 @@
                                             data-id="@item.IdMovimiento"
                                             data-tipo="@item.TipoMovimiento"
                                             title="Marcar como Completado">
-                                        <i class="bi bi-check-circle"></i>
+                                        Completado
                                     </button>
                                 }
 
                                 <a asp-action="Eliminar" asp-route-id="@item.IdMovimiento"
                                    class="btn btn-sm btn-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
+                                    Eliminar
                                 </a>
                             </div>
                         </td>
@@ -191,9 +179,7 @@
                 var mensaje = '¿Está seguro de marcar este servicio como completado?';
 
                 if (tipoMovimiento === 'Entrada') {
-                    mensaje = '¿Está seguro de completar esta Entrada?\n\n' +
-                             'Esto generará automáticamente una SALIDA y REDUCIRÁ el stock del inventario.';
-                }
+                    mensaje = '¿Está seguro de completar esta Entrada?\n\n'}
 
                 if (confirm(mensaje)) {
                     // Mostrar indicador de carga

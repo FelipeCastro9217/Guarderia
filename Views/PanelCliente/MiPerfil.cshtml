@@ -1,0 +1,161 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Guarderia.Models.Cliente
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-person-circle"></i> @ViewData["Title"]</h2>
+    <hr />
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="ActualizarPerfil" method="post">
+                <input type="hidden" asp-for="IdCliente" />
+                <input type="hidden" asp-for="FechaRegistro" />
+                <input type="hidden" asp-for="CuentaActiva" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="bi bi-person"></i> Información Personal</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Nombre" class="form-label"></label>
+                                <input asp-for="Nombre" class="form-control" />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Apellido" class="form-label"></label>
+                                <input asp-for="Apellido" class="form-control" />
+                                <span asp-validation-for="Apellido" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" type="email" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Telefono" class="form-label"></label>
+                                <input asp-for="Telefono" class="form-control" />
+                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Direccion" class="form-label"></label>
+                            <input asp-for="Direccion" class="form-control" />
+                            <span asp-validation-for="Direccion" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h5><i class="bi bi-shield-lock"></i> Cambiar Contraseña</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Opcional:</strong> Deja este campo vacío si no deseas cambiar tu contraseña.
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Clave" class="form-label">Nueva Contraseña</label>
+                            <input asp-for="Clave" type="password" class="form-control"
+                                   placeholder="Dejar en blanco para no cambiar" />
+                            <small class="text-muted">Mínimo 6 caracteres</small>
+                            <span asp-validation-for="Clave" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                    <a asp-action="Dashboard" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-info mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-info-circle"></i> Información de Cuenta</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Cliente desde:</dt>
+                        <dd class="col-sm-6">@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-6">Estado:</dt>
+                        <dd class="col-sm-6">
+                            @if (Model.CuentaActiva)
+                            {
+                                <span class="badge bg-success">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactiva</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">ID Cliente:</dt>
+                        <dd class="col-sm-6">#@Model.IdCliente</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card border-warning">
+                <div class="card-header bg-warning">
+                    <h5><i class="bi bi-shield-check"></i> Seguridad</h5>
+                </div>
+                <div class="card-body">
+                    <h6><strong>Recomendaciones:</strong></h6>
+                    <ul class="small">
+                        <li>Usa una contraseña segura</li>
+                        <li>No compartas tus credenciales</li>
+                        <li>Mantén tu información actualizada</li>
+                        <li>Revisa tu correo regularmente</li>
+                    </ul>
+
+                    <hr>
+
+                    <p class="small mb-0">
+                        <i class="bi bi-telephone"></i> ¿Problemas con tu cuenta?<br>
+                        Contáctanos: (601) 234-5678
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

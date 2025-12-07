@@ -19,15 +19,16 @@ namespace Guarderia.Data
         public DbSet<Factura> Facturas { get; set; }
         public DbSet<DetalleFactura> DetallesFacturas { get; set; }
         public DbSet<Cuidador> Cuidadores { get; set; }
+        public DbSet<Agendamiento> Agendamientos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuración de relaciones
+            // Configuración de relaciones existentes
             modelBuilder.Entity<Mascota>()
                 .HasOne(m => m.Cliente)
-                .WithMany()
+                .WithMany(c => c.Mascotas)
                 .HasForeignKey(m => m.IdCliente)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -72,6 +73,25 @@ namespace Guarderia.Data
                 .WithMany()
                 .HasForeignKey(m => m.IdCuidador)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Configuración de Agendamientos
+            modelBuilder.Entity<Agendamiento>()
+                .HasOne(a => a.Cliente)
+                .WithMany()
+                .HasForeignKey(a => a.IdCliente)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Agendamiento>()
+                .HasOne(a => a.Mascota)
+                .WithMany()
+                .HasForeignKey(a => a.IdMascota)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Agendamiento>()
+                .HasOne(a => a.Servicio)
+                .WithMany()
+                .HasForeignKey(a => a.IdServicio)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Datos iniciales de Servicios
             modelBuilder.Entity<InventarioServicio>().HasData(
@@ -125,7 +145,8 @@ namespace Guarderia.Data
             // Datos iniciales de Roles
             modelBuilder.Entity<Rol>().HasData(
                 new Rol { IdRol = 1, NombreRol = "Administrador", Descripcion = "Acceso total al sistema" },
-                new Rol { IdRol = 2, NombreRol = "Empleado", Descripcion = "Acceso limitado" }
+                new Rol { IdRol = 2, NombreRol = "Empleado", Descripcion = "Acceso limitado" },
+                new Rol { IdRol = 3, NombreRol = "Cliente", Descripcion = "Acceso al panel de cliente" }
             );
 
             // Datos iniciales de Usuarios

@@ -126,10 +126,10 @@
 <body>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-md-7">
                 <div class="login-card">
                     <div class="login-header">
-                        
+                        <i class="bi bi-house-heart"></i>
                         <h2>Guardería El Amigo</h2>
                         <p class="mb-0">Sistema de Gestión</p>
                     </div>
@@ -149,62 +149,120 @@
                             </div>
                         }
 
-                        <!-- Información de Registro Completo -->
+                        <!-- Información de Registro -->
                         <div class="register-info-box">
                             <h6>¿Eres cliente nuevo?</h6>
                             <p class="mb-2 small">Registra tu cuenta Y tu mascota en un solo paso</p>
                             <a asp-action="Registro" class="btn btn-registro-completo">
-                               Registro Cliente 
+                                <i class="bi bi-person-plus"></i> Registro Cliente
                             </a>
                         </div>
 
                         <hr class="my-4">
 
-                        <!-- Formulario de Login -->
-                        <h5 class="text-center mb-3">
-                            <i class="bi bi-box-arrow-in-right"></i> Acceso Administrativo
-                        </h5>
+                        <!-- Pestañas para Admin/Empleado y Cliente -->
+                        <ul class="nav nav-tabs" id="loginTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="admin-tab" data-bs-toggle="tab"
+                                        data-bs-target="#admin-login" type="button" role="tab">
+                                    <i class="bi bi-shield-lock tab-icon"></i>
+                                    Inicio Administración
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="cliente-tab" data-bs-toggle="tab"
+                                        data-bs-target="#cliente-login" type="button" role="tab">
+                                    <i class="bi bi-person-circle tab-icon"></i>
+                                    Inicio Clientes
+                                </button>
+                            </li>
+                        </ul>
 
-                        <form asp-controller="Acceso" asp-action="Login" method="post">
-                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="tab-content mt-4" id="loginTabsContent">
+                            <!-- Login Administrativo -->
+                            <div class="tab-pane fade show active" id="admin-login" role="tabpanel">
+                                <h5 class="text-center mb-3">
+                                    <i class="bi bi-box-arrow-in-right"></i> Acceso Administrativo
+                                </h5>
 
-                            <div class="mb-4">
-                                <label asp-for="Correo" class="form-label">
-                                    <i class="bi bi-envelope"></i> Correo Electrónico
-                                </label>
-                                <input asp-for="Correo" class="form-control form-control-lg"
-                                       type="email" placeholder="ejemplo@guarderia.com" required />
-                                <span asp-validation-for="Correo" class="text-danger"></span>
+                                <form asp-controller="Acceso" asp-action="Login" method="post">
+                                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                                    <div class="mb-4">
+                                        <label asp-for="Correo" class="form-label">
+                                            <i class="bi bi-envelope"></i> Correo Electrónico
+                                        </label>
+                                        <input asp-for="Correo" class="form-control form-control-lg"
+                                               type="email" placeholder="ejemplo@guarderia.com" required />
+                                        <span asp-validation-for="Correo" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label asp-for="Clave" class="form-label">
+                                            <i class="bi bi-lock"></i> Contraseña
+                                        </label>
+                                        <input asp-for="Clave" class="form-control form-control-lg"
+                                               type="password" placeholder="••••••••" required />
+                                        <span asp-validation-for="Clave" class="text-danger"></span>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-login w-100 btn-lg">
+                                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                                    </button>
+                                </form>
+
+                                <div class="credentials-info">
+                                    <h6 class="mb-2"><i class="bi bi-info-circle"></i> <strong>Credenciales de Prueba:</strong></h6>
+                                    <div class="small">
+                                        <p class="mb-1"><strong>Administrador:</strong></p>
+                                        <p class="mb-2 ms-3">
+                                            <i class="bi bi-envelope"></i> admin@guarderia.com<br>
+                                            <i class="bi bi-key"></i> admin
+                                        </p>
+                                        <p class="mb-1"><strong>Empleado:</strong></p>
+                                        <p class="mb-0 ms-3">
+                                            <i class="bi bi-envelope"></i> empleado@guarderia.com<br>
+                                            <i class="bi bi-key"></i> 123
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="mb-4">
-                                <label asp-for="Clave" class="form-label">
-                                    <i class="bi bi-lock"></i> Contraseña
-                                </label>
-                                <input asp-for="Clave" class="form-control form-control-lg"
-                                       type="password" placeholder="••••••••" required />
-                                <span asp-validation-for="Clave" class="text-danger"></span>
-                            </div>
+                            <!-- Login Cliente -->
+                            <div class="tab-pane fade" id="cliente-login" role="tabpanel">
+                                <h5 class="text-center mb-3">
+                                    <i class="bi bi-person-circle"></i> Acceso para Clientes
+                                </h5>
 
-                            <button type="submit" class="btn btn-login w-100 btn-lg">
-                                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-                            </button>
-                        </form>
+                                <form asp-controller="Acceso" asp-action="LoginCliente" method="post">
+                                    @Html.AntiForgeryToken()
 
-                        <!-- Credenciales de prueba -->
-                        <div class="credentials-info">
-                            <h6 class="mb-2"><i class="bi bi-info-circle"></i> <strong>Credenciales de Prueba:</strong></h6>
-                            <div class="small">
-                                <p class="mb-1"><strong>Administrador:</strong></p>
-                                <p class="mb-2 ms-3">
-                                    <i class="bi bi-envelope"></i> admin@guarderia.com<br>
-                                    <i class="bi bi-key"></i> admin
-                                </p>
-                                <p class="mb-1"><strong>Empleado:</strong></p>
-                                <p class="mb-0 ms-3">
-                                    <i class="bi bi-envelope"></i> empleado@guarderia.com<br>
-                                    <i class="bi bi-key"></i> 123
-                                </p>
+                                    <div class="mb-4">
+                                        <label class="form-label">
+                                            <i class="bi bi-envelope"></i> Correo Electrónico
+                                        </label>
+                                        <input name="Email" class="form-control form-control-lg"
+                                               type="email" placeholder="tucorreo@ejemplo.com" required />
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="form-label">
+                                            <i class="bi bi-lock"></i> Contraseña
+                                        </label>
+                                        <input name="Clave" class="form-control form-control-lg"
+                                               type="password" placeholder="••••••••" required />
+                                    </div>
+
+                                    <button type="submit" class="btn btn-login w-100 btn-lg">
+                                        <i class="bi bi-box-arrow-in-right"></i> Acceder a mi Panel
+                                    </button>
+                                </form>
+
+                                <div class="alert alert-info mt-3" role="alert">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>¿No tienes cuenta?</strong>
+                                    Registra tu información y la de tu mascota en el botón verde de arriba.
+                                </div>
                             </div>
                         </div>
                     </div>
